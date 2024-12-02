@@ -2,7 +2,7 @@
 'use client';  // Marque ce fichier comme un composant client
 
 import React, { useState } from 'react';
-import { generateSparqlQuery, fetchSparqlResults } from './requetes'; // Import des fonctions
+import { generateSparqlQuery, fetchSparqlResults, afficherResultats } from './requetes'; // Import des fonctions
 
 export default function Page() {
   const [searchQuery, setSearchQuery] = useState('');  // État pour stocker la recherche
@@ -25,6 +25,7 @@ export default function Page() {
 
     // Met à jour l'état avec les résultats de la recherche
     setResults(data);
+    afficherResultats(data);
   };
 
   return (

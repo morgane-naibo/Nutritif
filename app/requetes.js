@@ -40,4 +40,40 @@ export function generateSparqlQuery(plat) {
       return [];
     }
   }
+
+  export function afficherResultats(data) {
+    // Vérifier si la réponse contient des résultats valides
+    if (!data || !data.results || !data.results.bindings) {
+      console.error("Aucun résultat trouvé ou la réponse SPARQL est mal formatée.");
+      return;  // Retourner sans rien afficher si les données sont invalides
+    }
+  
+    let contenuTableau = "<table>";
+  
+    // Vérifier si des résultats sont présents dans les bindings
+    data.results.bindings.forEach(r => {
+      contenuTableau += "<tr>";  // Début de la ligne de tableau
+  
+      for (const v in r) {
+        if (r.hasOwnProperty(v)) {
+          if (r[v]) {
+            if (r[v].type === "uri") {
+              contenuTableau += `<td><a href="${r[v].value}" target="_blank">${r[v].value}</a></td>`;
+            } else {
+              contenuTableau += `<td>${r[v].value}</td>`;
+            }
+          } else {
+            contenuTableau += "<td></td>";
+          }
+        }
+      }
+  
+      contenuTableau += "</tr>";  // Fin de la ligne de tableau
+    });
+  
+    contenuTableau += "</table>";  // Fin du tableau
+  
+    // Ajouter le contenu du tableau dans l'élément HTML avec l'ID "resultats"
+    document.getElementById("resultats").innerHTML = contenuTableau;
+  }
   
