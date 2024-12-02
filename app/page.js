@@ -1,20 +1,36 @@
 // pages/page.js
-
-'use client'; // Ajoutez cette ligne pour marquer ce fichier comme un composant client
+'use client';  // Marque ce fichier comme un composant client
 
 import React, { useState } from 'react';
+import { generateSparqlQueryPlat, fetchSparqlResults, generateSparqlQueryChef } from './requetes'; // Import des fonctions
 
 export default function Page() {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');  // État pour stocker la recherche
+  const [results, setResults] = useState([]);  // État pour stocker les résultats de la requête SPARQL
 
+  // Fonction pour gérer le changement dans le champ de recherche
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
   };
 
-  const handleSearchSubmit = (e) => {
-    e.preventDefault();
-    console.log("Searching for:", searchQuery);
-    // Ajouter ici la logique de recherche (par exemple, appel d'API)
+  // Fonction pour gérer la soumission du formulaire
+  const handleSearchSubmit = async (e) => {
+    e.preventDefault();  // Empêche le rechargement de la page
+
+    // Génère la requête SPARQL avec le terme de recherche
+
+    let query;
+    if (searchQuery.toLowerCase().includes("chef")) {
+      query = generateSparqlQueryChef(searchQuery);
+    } else {
+      query = generateSparqlQueryPlat(searchQuery);
+    }
+
+    // Appelle fetchSparqlResults pour récupérer les résultats
+    const data = await fetchSparqlResults(query);
+
+    // Met à jour l'état avec les résultats de la recherche
+    setResults(data);
   };
 
   return (
@@ -23,7 +39,7 @@ export default function Page() {
       <form onSubmit={handleSearchSubmit} style={styles.searchForm}>
         <input
           type="text"
-          placeholder="Rechercher..."
+          placeholder="Rechercher un plat..."
           value={searchQuery}
           onChange={handleSearchChange}
           style={styles.searchInput}
@@ -32,6 +48,29 @@ export default function Page() {
           Rechercher
         </button>
       </form>
+
+      <div style={styles.resultsContainer}>
+        {results.length > 0 ? (
+          results.map((result, index) => (
+            <div key={index} style={styles.resultItem}>
+              {/* Vérifier si c'est un chef ou un plat en fonction des données renvoyées */}
+              {result.chefLabel ? (
+                <div>
+                  <h2>{result.chefLabel.value}</h2>
+                  <p>{result.description.value}</p>
+                </div>
+              ) : (
+                <div>
+                  <h2>{result.dishLabel.value}</h2>
+                  <p>{result.abstract.value}</p>
+                </div>
+              )}
+            </div>
+          ))
+        ) : (
+          <p>Aucun résultat trouvé.</p>
+        )}
+      </div>
     </div>
   );
 }
@@ -74,5 +113,15 @@ const styles = {
     borderRadius: '5px',
     cursor: 'pointer',
   },
+  resultsContainer: {
+    marginTop: '20px',
+    padding: '10px',
+    backgroundColor: '#fff',
+    borderRadius: '5px',
+    width: '80%',
+    maxWidth: '600px',
+  },
+  resultItem: {
+    marginBottom: '15px',
+  },
 };
-

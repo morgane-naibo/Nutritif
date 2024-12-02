@@ -1,93 +1,62 @@
+// requetes.js
 
-
-
-
-
-
-// On précise que cette fonction est asynchrone pour ne pas bloquer le navigateur
-  // pendant que la requête SPARQL est traitée par DBPedia.
-  // On utilise une requête HTTP pour interroger le moteur SPARQL de DBPedia.
-export default async function requeteChef() {
-
-    // On récupère le contenu de la requête à envoyer au moteur SPARQL de DBPedia
-    var requete = document.getElementById("searchQuery").value;
-
-   // Construire la requête SPARQL avec un filtre sur la langue et le nom
-    var contenu_requete = "PREFIX dbo: <http://dbpedia.org/ontology/> " +
-    "PREFIX dbr: <http://dbpedia.org/resource/> " +
-    "SELECT ?chef ?chefLabel ?naissance ?description " +
-    "WHERE { " +
-    "?chef a dbo:Person ; " +
-    "rdfs:label ?chefLabel ; " +
-    "dbo:birthDate ?naissance ; " +
-    "dbo:abstract ?description . " +
-    "FILTER (?chefLabel = \"" + requete + "\"@fr && LANG(?description) = \"fr\") " + // Filtrage sur le label et la langue de la description
-    "}";
-    // On encode la requête SPARQL, puis on forme l'URL à transmettre à DBPedia
-    // On précise également que l'on veut les résultats de la requête au format JSON
-    var url_base = "http://dbpedia.org/sparql";
-    var url = url_base + "?query=" + encodeURIComponent(contenu_requete) + "&format=json";
-
-    // On envoie la requête au serveur de manière asynchrone (à l'aide du mot clé "await")
-    const reponse = await fetch(url);
-
-    // On parse les résultats de la requête, qui sont placés dans un objet JavaScript
-    const data = await reponse.json();
-
-    // L'objet data contient les résultats de la requête. Il faut étudier la structure de cet objet
-    // pour les insérer dans les différentes pages de votre application.
-    console.log(data);
-    afficherResultats(data);
+// Fonction pour générer la requête SPARQL pour DBpedia en fonction du terme de recherche
+export function generateSparqlQueryPlat(plat) {
+    // Requête SPARQL pour rechercher un plat dans DBpedia
+    return `
+      SELECT ?dish ?dishLabel ?abstract
+      WHERE {
+        ?dish rdf:type dbo:Food ;
+              rdfs:label ?dishLabel ;
+              dbo:abstract ?abstract .
+        FILTER(LANG(?abstract) = "en") 
+        FILTER(CONTAINS(LCASE(?dishLabel), "${plat.toLowerCase()}"))
+      }
+      LIMIT 5
+    `;
   }
 
-  // Affichage des résultats dans un tableau
-  function afficherResultats(data)
-  {
-    // Tableau pour mémoriser l'ordre des variables ; sans doute pas nécessaire
-    // pour vos applications, c'est juste pour la démo sous forme de tableau
-    var index = [];
+  // Fonction pour générer la requête SPARQL pour DBpedia en fonction du terme de recherche
+  export function generateSparqlQueryChef(chef) {
+    const chefName = chef.replace(/^chef\s+/i, '').trim();
 
-    var contenuTableau = "<tr>";
-
-    data.head.vars.forEach((v, i) => {
-      contenuTableau += "<th>" + v + "</th>";
-      index.push(v);
-    });
-
-    // Les résultats de la requête sont contenus dans l'objet "bindings".
-    // Il y a un binding par résultat. Pour chaque binding, vous pouvez
-    // accéder à la valeur d'une variable avec la syntaxe binding[variable].value .
-    // Ici, on construit le code HTML du tableau de résultats, et on insère ce code
-    // dans l'élément "resultats" de la page. 
-    data.results.bindings.forEach(r => {
-      contenuTableau += "<tr>";
-
-      index.forEach(v => {
-
-        if (r[v])
-        {
-          if (r[v].type === "uri")
-          {
-            contenuTableau += "<td><a href='" + r[v].value + "' target='_blank'>" + r[v].value + "</a></td>";
-          }
-          else {
-            contenuTableau += "<td>" + r[v].value + "</td>";
-          }
-        }
-        else
-        {
-          contenuTableau += "<td></td>";
-        }
-        
+    // Requête SPARQL pour rechercher un chef dans DBpedia
+    return `
+    SELECT DISTINCT ?chef ?chefLabel ?naissance ?description 
+    WHERE {
+      ?chef a dbo:Person ;
+      rdfs:label ?chefLabel ;
+      dbo:birthDate ?naissance ;
+      dbo:abstract ?description .
+      FILTER (LANG(?description) = "fr" && LANG(?chefLabel) = "fr")
+      FILTER (CONTAINS(LCASE(?chefLabel), LCASE("${chefName}")))
+    }
+    `;
+  }
+  
+  
+  // Fonction pour envoyer la requête SPARQL à DBpedia et récupérer les résultats
+  export async function fetchSparqlResults(query) {
+    const endpointUrl = 'https://dbpedia.org/sparql';  // URL de l'endpoint SPARQL de DBpedia
+  
+    try {
+      const response = await fetch(endpointUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          query: query,  // La requête SPARQL générée
+          format: 'json',  // Format des résultats (JSON)
+        }),
       });
-
-
-      contenuTableau += "</tr>";
-    });
-
-
-    contenuTableau += "</tr>";
-
-    document.getElementById("resultats").innerHTML = contenuTableau;
-
+  
+      // Si la requête est réussie, retourner les résultats
+      const data = await response.json();
+      return data.results.bindings;
+    } catch (error) {
+      console.error('Erreur lors de la récupération des résultats SPARQL:', error);
+      return [];
+    }
   }
+  
