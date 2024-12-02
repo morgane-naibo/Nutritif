@@ -24,7 +24,7 @@ export function generateSparqlQueryPlat(plat) {
     return `
     SELECT DISTINCT ?chef ?chefLabel ?naissance ?description 
     WHERE {
-      ?chef a dbo:Person ;
+      ?chef a dbo:Chef ;
       rdfs:label ?chefLabel ;
       dbo:birthDate ?naissance ;
       dbo:abstract ?description .

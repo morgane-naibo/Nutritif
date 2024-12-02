@@ -31,7 +31,6 @@ export default function Page() {
 
     // Met à jour l'état avec les résultats de la recherche
     setResults(data);
-    afficherResultats(data);
   };
 
   return (
