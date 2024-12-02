@@ -2,7 +2,7 @@
 'use client';  // Marque ce fichier comme un composant client
 
 import React, { useState } from 'react';
-import { generateSparqlQueryPlat, fetchSparqlResults, generateSparqlQueryChef } from './requetes'; // Import des fonctions
+import { generateSparqlQueryPlat, fetchSparqlResults, generateSparqlQueryChef, generateSparqlQueryCuisine } from './requetes'; // Import des fonctions
 
 export default function Page() {
   const [searchQuery, setSearchQuery] = useState('');  // État pour stocker la recherche
@@ -22,7 +22,10 @@ export default function Page() {
     let query;
     if (searchQuery.toLowerCase().includes("chef")) {
       query = generateSparqlQueryChef(searchQuery);
-    } else {
+    } else if (searchQuery.toLowerCase().includes("cuisine")) {
+      query = generateSparqlQueryCuisine(searchQuery);
+    }
+    else {
       query = generateSparqlQueryPlat(searchQuery);
     }
 
@@ -53,16 +56,24 @@ export default function Page() {
         {results.length > 0 ? (
           results.map((result, index) => (
             <div key={index} style={styles.resultItem}>
-              {/* Vérifier si c'est un chef ou un plat en fonction des données renvoyées */}
               {result.chefLabel ? (
                 <div>
                   <h2>{result.chefLabel.value}</h2>
                   <p>{result.description.value}</p>
                 </div>
-              ) : (
+              ) : result.dishLabel ? (
                 <div>
                   <h2>{result.dishLabel.value}</h2>
                   <p>{result.abstract.value}</p>
+                </div>
+              ) : result.cuisineLabel ? (
+                <div>
+                  <h2>{result.cuisineLabel.value}</h2>
+                  <p>{result.description.value}</p>
+                </div>
+              ) : (
+                <div>
+                  <p>Aucun résultat trouvé.</p>
                 </div>
               )}
             </div>

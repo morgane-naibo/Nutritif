@@ -33,6 +33,23 @@ export function generateSparqlQueryPlat(plat) {
     }
     `;
   }
+
+  export function generateSparqlQueryCuisine(pays) {
+    const paysName = pays.replace(/^cuisine\s+/i, '').trim();
+
+    // Requête SPARQL pour rechercher une cuisine dans DBpedia
+    return `
+      SELECT DISTINCT ?cuisine ?cuisineLabel ?description
+      WHERE {
+        ?cuisine a dbo:Country ;
+        a owl:Thing ;
+        dbo:abstract ?description;
+        rdfs:label ?cuisineLabel .
+        FILTER (LANG(?cuisineLabel) = "fr" && LANG(?description) = "fr")
+        FILTER (CONTAINS(LCASE(?description), LCASE("cuisine")) && CONTAINS(LCASE(?description), LCASE("${paysName}")))
+      }
+      `;
+  }
   
   
   // Fonction pour envoyer la requête SPARQL à DBpedia et récupérer les résultats
