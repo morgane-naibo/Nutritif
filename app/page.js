@@ -36,6 +36,41 @@ export default function Page() {
     setResults(data);
   };
 
+  const styles_result = {
+    container: {
+      display: 'flex', // Arrange items horizontally
+      alignItems: 'flex-start', // Align items to the top
+      marginBottom: '1rem', // Add spacing between items
+    },
+    image: {
+      width: '100px', // Set the width of the image
+      height: 'auto', // Maintain aspect ratio
+      marginRight: '1rem', // Add space between the image and text
+    },
+    textContainer: {
+      display: 'flex',
+      flexDirection: 'column', // Stack text vertically
+      justifyContent: 'space-between', // Evenly distribute the text
+    },
+    dishLabel: {
+      margin: 0, // Remove default margin
+      fontSize: '1.2rem', // Adjust font size
+      fontWeight: 'bold', // Make the label bold
+    },
+    abstract: {
+      margin: 0,
+      fontSize: '1rem',
+      width: '470px', // Set a fixed width for the box
+      height: '45px', // Set a fixed height for the box
+      overflow: 'hidden', // Hide overflow content
+      textOverflow: 'ellipsis', // Display "..." for truncated text
+      display: '-webkit-box', // Use a flexible box model
+      WebkitBoxOrient: 'vertical', // Set orientation to vertical
+      WebkitLineClamp: 3, // Limit to 3 lines (adjust as needed)
+    },
+  };
+  
+
   return (
     <div style={styles.container}>
       <h1 style={styles.title}>Nutritif</h1>
@@ -62,10 +97,14 @@ export default function Page() {
                   <p>{result.description.value}</p>
                 </div>
               ) : result.dishLabel ? (
-                <div>
-                  <h2>{result.dishLabel.value}</h2>
-                  <p>{result.abstract.value}</p>
+                <div style={styles_result.container}>
+                  <img src={result.image.value} alt={result.dishLabel.value} style={styles_result.image} />
+                  <div style={styles_result.textContainer}>
+                    <h2 style={styles_result.dishLabel}>{result.dishLabel.value}</h2>
+                    <p style={styles_result.abstract}>{result.abstract.value}</p>
+                  </div>
                 </div>
+
               ) : result.cuisineLabel ? (
                 <div>
                   <h2>{result.cuisineLabel.value}</h2>

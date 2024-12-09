@@ -1,20 +1,38 @@
 // requetes.js
 
 // Fonction pour générer la requête SPARQL pour DBpedia en fonction du terme de recherche
+// export function generateSparqlQueryPlat(plat) {
+//     // Requête SPARQL pour rechercher un plat dans DBpedia
+//     return `
+//       SELECT DISTINCT ?dish ?dishLabel ?abstract ?image
+//       WHERE {
+//         ?dish rdf:type dbo:Food ;
+//               rdfs:label ?dishLabel ;
+//               dbo:abstract ?abstract ;
+//               foaf:depiction ?image.
+//         FILTER(LANG(?abstract) = "fr") 
+//         FILTER(CONTAINS(LCASE(?dishLabel), "${plat.toLowerCase()}"))
+//       }
+//       LIMIT 15
+//     `;
+//   }
+
 export function generateSparqlQueryPlat(plat) {
-    // Requête SPARQL pour rechercher un plat dans DBpedia
-    return `
-      SELECT ?dish ?dishLabel ?abstract
-      WHERE {
-        ?dish rdf:type dbo:Food ;
-              rdfs:label ?dishLabel ;
-              dbo:abstract ?abstract .
-        FILTER(LANG(?abstract) = "en") 
-        FILTER(CONTAINS(LCASE(?dishLabel), "${plat.toLowerCase()}"))
-      }
-      LIMIT 5
-    `;
-  }
+  return `
+    SELECT DISTINCT ?abstract (SAMPLE(?dishLabel) AS ?dishLabel) (SAMPLE(?image) AS ?image)
+    WHERE {
+      ?dish rdf:type dbo:Food ;
+            rdfs:label ?dishLabel ;
+            dbo:abstract ?abstract ;
+            dbo:thumbnail ?image.
+      FILTER(LANG(?abstract) = "fr") 
+      FILTER(CONTAINS(LCASE(?dishLabel), "${plat.toLowerCase()}"))
+    }
+    GROUP BY ?abstract
+    LIMIT 15
+  `;
+}
+
 
   // Fonction pour générer la requête SPARQL pour DBpedia en fonction du terme de recherche
   export function generateSparqlQueryChef(chef) {
