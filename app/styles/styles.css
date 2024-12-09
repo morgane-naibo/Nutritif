@@ -92,7 +92,7 @@
     margin: 0;
     font-size: 1rem;
     width: 470px; /* Set a fixed width for the box */
-    height: 45px; /* Set a fixed height for the box */
+    height: 70px; /* Set a fixed height for the box */
     overflow: hidden; /* Hide overflow content */
     text-overflow: ellipsis; /* Display "..." for truncated text */
     display: -webkit-box; /* Use a flexible box model */
