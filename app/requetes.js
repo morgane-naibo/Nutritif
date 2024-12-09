@@ -40,11 +40,12 @@ export function generateSparqlQueryPlat(plat) {
 
     // Requête SPARQL pour rechercher un chef dans DBpedia
     return `
-    SELECT DISTINCT ?chef ?chefLabel ?naissance ?description 
+    SELECT DISTINCT ?chef ?chefLabel ?naissance ?description ?image
     WHERE {
       ?chef a dbo:Chef ;
       rdfs:label ?chefLabel ;
       dbo:birthDate ?naissance ;
+      dbo:thumbnail ?image;
       dbo:abstract ?description .
       FILTER (LANG(?description) = "fr" && LANG(?chefLabel) = "fr")
       FILTER (CONTAINS(LCASE(?chefLabel), LCASE("${chefName}")))
@@ -57,12 +58,13 @@ export function generateSparqlQueryPlat(plat) {
 
     // Requête SPARQL pour rechercher une cuisine dans DBpedia
     return `
-      SELECT DISTINCT ?cuisine ?cuisineLabel ?description
+      SELECT DISTINCT ?cuisine ?cuisineLabel ?description ?image
       WHERE {
         ?cuisine a dbo:Country ;
         a owl:Thing ;
         dbo:abstract ?description;
         rdfs:label ?cuisineLabel;
+        dbo:thumbnail ?image;
         dbo:wikiPageWikiLink ?dishes.
         FILTER (LANG(?cuisineLabel) = "fr" && LANG(?description) = "fr")
         FILTER (CONTAINS(LCASE(?cuisineLabel), LCASE("cuisine")) && CONTAINS(LCASE(?description), LCASE("${paysName}")))

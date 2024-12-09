@@ -318,9 +318,12 @@ const YourComponent = () => {
           results.map((result, index) => (
             <div key={index} style={styles.resultItem}>
               {result.chefLabel ? (
-                <div>
-                  <h2>{result.chefLabel.value}</h2>
-                  <p>{result.description.value}</p>
+                <div style={styles_result.container}>
+                  <img src={result.image.value} alt={result.chefLabel.value} style={styles_result.image} />
+                  <div style={styles_result.textContainer}>
+                    <h2 style={styles_result.dishLabel}>{result.chefLabel.value}</h2>
+                    <p style={styles_result.abstract}>{result.description.value}</p>
+                  </div>
                 </div>
               ) : result.dishLabel ? (
                 <div style={styles_result.container}>
@@ -331,9 +334,12 @@ const YourComponent = () => {
                   </div>
                 </div>
               ) : result.cuisineLabel ? (
-                <div>
-                  <h2>{result.cuisineLabel.value}</h2>
-                  <p>{result.description.value}</p>
+                <div style={styles_result.container}>
+                  <img src={result.image.value} alt={result.cuisineLabel.value} style={styles_result.image} />
+                  <div style={styles_result.textContainer}>
+                    <h2 style={styles_result.dishLabel}>{result.cuisineLabel.value}</h2>
+                    <p style={styles_result.abstract}>{result.description.value}</p>
+                  </div>
                 </div>
               ) : (
                 <div>
