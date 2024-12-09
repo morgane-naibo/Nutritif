@@ -1,22 +1,5 @@
 // requetes.js
 
-// Fonction pour générer la requête SPARQL pour DBpedia en fonction du terme de recherche
-// export function generateSparqlQueryPlat(plat) {
-//     // Requête SPARQL pour rechercher un plat dans DBpedia
-//     return `
-//       SELECT DISTINCT ?dish ?dishLabel ?abstract ?image
-//       WHERE {
-//         ?dish rdf:type dbo:Food ;
-//               rdfs:label ?dishLabel ;
-//               dbo:abstract ?abstract ;
-//               foaf:depiction ?image.
-//         FILTER(LANG(?abstract) = "fr") 
-//         FILTER(CONTAINS(LCASE(?dishLabel), "${plat.toLowerCase()}"))
-//       }
-//       LIMIT 15
-//     `;
-//   }
-
 export function generateSparqlQueryPlat(plat) {
   return `
     SELECT DISTINCT ?abstract (SAMPLE(?dishLabel) AS ?dishLabel) (SAMPLE(?image) AS ?image)
@@ -98,4 +81,58 @@ export function generateSparqlQueryPlat(plat) {
       return [];
     }
   }
+
+  export async function fetchSuggestions(query, type) {
+    if (query.length < 3) {
+      return [];
+    }
+    
+    let suggestionQuery;
+    if (type === 'chef') {
+      suggestionQuery = generateSparqlQueryChef(query);
+    } else if (type === 'cuisine') {
+      suggestionQuery = generateSparqlQueryCuisine(query);
+    } else {
+      // Par défaut "plat"
+      suggestionQuery = generateSparqlQueryPlat(query);
+    }
+
+    const data = await fetchSparqlResults(suggestionQuery);
+
+    return data.map(item => {
+      if (item.chefLabel) return item.chefLabel.value;
+      if (item.dishLabel) return item.dishLabel.value;
+      if (item.cuisineLabel) return item.cuisineLabel.value;
+      return null;
+    }).filter(Boolean); // Filtre les valeurs null/undefined
+  }
+
+  const handleSearchChange = async (e) => {
+    const value = e.target.value;
+    setSearchQuery(value);
+
+    if (value.length >= 3) {
+      const suggs = await fetchSuggestions(value, searchType);
+      setSuggestions(suggs);
+    } else {
+      setSuggestions([]);
+    }
+  };
+
+  const handleSearchSubmit = async (e) => {
+    e.preventDefault();
+    setSuggestions([]); // On ferme les suggestions après la soumission
+
+    let query;
+    if (searchType === 'chef') {
+      query = generateSparqlQueryChef(searchQuery);
+    } else if (searchType === 'cuisine') {
+      query = generateSparqlQueryCuisine(searchQuery);
+    } else {
+      query = generateSparqlQueryPlat(searchQuery);
+    }
+
+    const data = await fetchSparqlResults(query);
+    setResults(data);
+  };
   
