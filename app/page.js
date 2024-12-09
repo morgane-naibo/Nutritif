@@ -4,13 +4,39 @@ import React, { useState } from 'react';
 import Image from "next/image";
 import { generateSparqlQueryPlat, fetchSparqlResults, generateSparqlQueryChef, generateSparqlQueryCuisine } from './requetes';
 
-export default function Page() {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [results, setResults] = useState([]);
+const YourComponent = () => {
+  const [searchQuery, setSearchQuery] = useState('');  // État pour stocker la recherche
+  const [results, setResults] = useState([]);  // État pour stocker les résultats de la requête SPARQL
+  const [suggestions, setSuggestions] = useState({ plats: [], chefs: [], cuisines: [] });
   const [searchType, setSearchType] = useState('plat'); // par défaut "plat"
 
-  const handleSearchChange = (e) => {
-    setSearchQuery(e.target.value);
+  // Fonction pour gérer le changement dans le champ de recherche
+  const handleSearchChange = async(e) => {
+    const value = e.target.value;
+    setSearchQuery(value);
+    if (value.length > 0) {
+      // Lancer des requêtes pour les plats, chefs et cuisines
+      const [plats, chefs, cuisines] = await Promise.all([
+        fetchSparqlResults(generateSparqlQueryPlat(value)),
+        fetchSparqlResults(generateSparqlQueryChef(value)),
+        fetchSparqlResults(generateSparqlQueryCuisine(value)),
+      ]);
+
+      // Mettre à jour les suggestions classées par catégorie
+      setSuggestions({
+        plats: plats.slice(0, 5).map((result) => result.dishLabel?.value || ''),
+        chefs: chefs.slice(0, 5).map((result) => result.chefLabel?.value || ''),
+        cuisines: cuisines.slice(0, 5).map((result) => result.cuisineLabel?.value || ''),
+      });
+    } else {
+      // Réinitialiser les suggestions si la saisie est trop courte
+      setSuggestions({ plats: [], chefs: [], cuisines: [] });
+    }
+  };
+
+  const handleSuggestionClick= (suggestion) =>{
+    setSearchQuery(suggestion);
+    setSuggestions({plats : [], chefs : [], cuisines : []});
   };
 
   const handleSearchSubmit = async (e) => {
@@ -30,10 +56,124 @@ export default function Page() {
     setResults(data);
   };
 
+  const styles = {
+    container: {
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      alignItems: 'center',
+      minHeight: '100vh',
+      backgroundColor: '#f7f7f7',
+      textAlign: 'center',
+    },
+    title: {
+      fontSize: '36px',
+      fontWeight: 'bold',
+      marginBottom: '20px',
+      color: '#333',
+    },
+    searchForm: {
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    searchInput: {
+      padding: '10px',
+      fontSize: '16px',
+      width: '300px',
+      borderRadius: '5px',
+      border: '1px solid #ccc',
+      marginRight: '10px',
+    },
+    searchButton: {
+      padding: '10px 20px',
+      fontSize: '16px',
+      backgroundColor: '#4CAF50',
+      color: 'white',
+      border: 'none',
+      borderRadius: '5px',
+      cursor: 'pointer',
+    },
+    suggestionsList: {
+      position: 'absolute',
+      top: '40px',
+      left: '0',
+      width: '100%',
+      backgroundColor: 'white',
+      border: '1px solid #ccc',
+      borderRadius: '5px',
+      zIndex: 1000,
+      listStyle: 'none',
+      padding: '0',
+      margin: '0',
+      maxHeight: '150px',
+      overflowY: 'auto',
+    },
+    suggestionItem: {
+      padding: '10px',
+      cursor: 'pointer',
+    },
+    resultsContainer: {
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginTop: '20px',
+      padding: '10px',
+      backgroundColor: '#fff',
+      borderRadius: '5px',
+      width: '80%',  // Adjust the width for centering
+      maxWidth: '600px',  // Limit the width to 600px
+      textAlign: 'center', // Center text inside the results container
+    },
+    resultItem: {
+      marginBottom: '15px',
+      textAlign: 'center',
+    },
+  };
+  
+  
+  
+  const suggestionsStyle = {
+    position: "absolute",
+    top: "100%",  // Places the suggestions below the search bar
+    marginTop: "0.5rem",  // Adds space between the search bar and suggestions
+    width: "100%",  // Ensures it matches the input's width
+    maxWidth: "16rem",  // Matches sm:w-64 in Tailwind (for responsive width)
+    backgroundColor: "white",  // Background color of the dropdown
+    border: "1px solid #d1d5db",  // Light gray border (matching Tailwind's gray-300)
+    borderRadius: "0.25rem",  // Rounded corners
+    boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",  // Adds shadow for visual separation
+    zIndex: 10,  // Ensures it's above other content
+    maxHeight: "200px",  // Maximum height for scrolling
+    overflowY: "auto",  // Enables scrolling if content overflows
+  };
+  
+  const suggestionItemStyle = {
+    padding: "0.5rem 1rem",  // Padding for each item
+    cursor: "pointer",  // Pointer cursor on hover
+    transition: "background-color 0.3s",  // Smooth background color transition
+  };
+  
+  const suggestionItemHoverStyle = {
+    backgroundColor: "#f3f4f6",  // Light hover background (Tailwind's gray-100)
+  };
+  
+  const suggestionCategoryStyle = {
+    padding: "0.5rem",  // Padding around categories
+  };
+  
+  const suggestionCategoryHeadingStyle = {
+    fontWeight: "bold",  // Make category headings bold
+    marginBottom: "0.25rem",  // Space below the category title
+  };
+  
+
   const styles_result = {
     container: {
       display: 'flex', // Arrange items horizontally
-      alignItems: 'flex-start', // Align items to the top
+      alignItems: 'center', // Align items vertically at the center
+      justifyContent: 'center', // Center items horizontally
       marginBottom: '1rem', // Add spacing between items
     },
     image: {
@@ -44,7 +184,8 @@ export default function Page() {
     textContainer: {
       display: 'flex',
       flexDirection: 'column', // Stack text vertically
-      justifyContent: 'space-between', // Evenly distribute the text
+      justifyContent: 'center', // Center content vertically within textContainer
+      alignItems: 'flex-start', // Align text to the left side
     },
     dishLabel: {
       margin: 0, // Remove default margin
@@ -89,6 +230,64 @@ export default function Page() {
             onChange={handleSearchChange}
             className="p-2 border border-gray-300 rounded focus:bg-black focus:text-white w-full sm:w-64"
           />
+          
+          {/* Suggestions dropdown
+          {(suggestions.plats.length > 0 ||
+            suggestions.chefs.length > 0 ||
+            suggestions.cuisines.length > 0) && (
+            <div style={styles.suggestionsList}>
+              {suggestions.plats.length > 0 && (
+                <div style={styles.suggestionCategory}>
+                  <h4>Plats</h4>
+                  <ul>
+                    {suggestions.plats.map((suggestion, index) => (
+                      <li
+                        key={`plat-${index}`}  
+                        style={styles.suggestionItem}
+                        onClick={() => handleSuggestionClick(suggestion)}
+                      >
+                        {suggestion}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {suggestions.chefs.length > 0 && (
+                <div style={styles.suggestionCategory}>
+                  <h4>Chefs</h4>
+                  <ul>
+                    {suggestions.chefs.map((suggestion, index) => (
+                      <li
+                        key={`chef-${index}`} 
+                        style={styles.suggestionItem}
+                        onClick={() => handleSuggestionClick(suggestion)}
+                      >
+                        {suggestion}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {suggestions.cuisines.length > 0 && (
+                <div style={styles.suggestionCategory}>
+                  <h4>Cuisines</h4>
+                  <ul>
+                    {suggestions.cuisines.map((suggestion, index) => (
+                      <li
+                        key={`cuisine-${index}`} 
+                        style={styles.suggestionItem}
+                        onClick={() => handleSuggestionClick(suggestion)}
+                      >
+                        {suggestion}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )} */}
+
+          {/* Search buttons */}
           <button
             type="submit"
             onClick={() => setSearchType('plat')}
@@ -111,7 +310,9 @@ export default function Page() {
             Rechercher une cuisine
           </button>
         </form>
+      </div>
 
+      {/* Results container */}
       <div style={styles.resultsContainer}>
         {results.length > 0 ? (
           results.map((result, index) => (
@@ -122,9 +323,12 @@ export default function Page() {
                   <p>{result.description.value}</p>
                 </div>
               ) : result.dishLabel ? (
-                <div>
-                  <h2>{result.dishLabel.value}</h2>
-                  <p>{result.abstract.value}</p>
+                <div style={styles_result.container}>
+                  <img src={result.image.value} alt={result.dishLabel.value} style={styles_result.image} />
+                  <div style={styles_result.textContainer}>
+                    <h2 style={styles_result.dishLabel}>{result.dishLabel.value}</h2>
+                    <p style={styles_result.abstract}>{result.abstract.value}</p>
+                  </div>
                 </div>
               ) : result.cuisineLabel ? (
                 <div>
@@ -136,65 +340,14 @@ export default function Page() {
                   <p>Aucun résultat trouvé.</p>
                 </div>
               )}
-              </div>
-            ))
-          ) : (
-            <p>Aucun résultat trouvé.</p>
-          )}
-        </div>
+            </div>
+          ))
+        ) : (
+          <p>Aucun résultat trouvé.</p>
+        )}
       </div>
     </div>
   );
-}
-
-const styles = {
-  container: {
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
-    alignItems: 'center',
-    minHeight: '100vh',
-    backgroundColor: '#f7f7f7',
-    textAlign: 'center',
-  },
-  title: {
-    fontSize: '36px',
-    fontWeight: 'bold',
-    marginBottom: '20px',
-    color: '#333',
-  },
-  searchForm: {
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  searchInput: {
-    padding: '10px',
-    fontSize: '16px',
-    width: '300px',
-    borderRadius: '5px',
-    border: '1px solid #ccc',
-    marginRight: '10px',
-  },
-  searchButton: {
-    padding: '10px 20px',
-    fontSize: '16px',
-    backgroundColor: '#4CAF50',
-    color: 'white',
-    border: 'none',
-    borderRadius: '5px',
-    cursor: 'pointer',
-  },
-  resultsContainer: {
-    marginTop: '20px',
-    padding: '10px',
-    backgroundColor: '#fff',
-    borderRadius: '5px',
-    width: '80%',
-    maxWidth: '600px',
-  },
-  resultItem: {
-    marginBottom: '15px',
-  },
 };
 
+export default YourComponent; 

@@ -62,9 +62,11 @@ export function generateSparqlQueryPlat(plat) {
         ?cuisine a dbo:Country ;
         a owl:Thing ;
         dbo:abstract ?description;
-        rdfs:label ?cuisineLabel .
+        rdfs:label ?cuisineLabel;
+        dbo:wikiPageWikiLink ?dishes.
         FILTER (LANG(?cuisineLabel) = "fr" && LANG(?description) = "fr")
-        FILTER (CONTAINS(LCASE(?description), LCASE("cuisine")) && CONTAINS(LCASE(?description), LCASE("${paysName}")))
+        FILTER (CONTAINS(LCASE(?cuisineLabel), LCASE("cuisine")) && CONTAINS(LCASE(?description), LCASE("${paysName}")))
+        FILTER (CONTAINS(LCASE(STR(?dishes)), LCASE(STR("dish"))))
       }
       `;
   }
