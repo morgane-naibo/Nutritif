@@ -64,51 +64,58 @@ const YourComponent = () => {
   };
 
   return (
-    <div>
+    <div className="min-h-screen flex flex-col bg-red-600">
+      {/* Bandeau blanc avec le logo centré */}
       <div className="w-full bg-white flex justify-center items-center py-14 px-12 relative">
         <div className="absolute left-0 right-0 flex justify-center">
-          <Image src="/logo.svg" alt="Logo" width={100} height={100} />
+          <Image
+            src="/logo.svg"
+            alt="Logo"
+            width={100}
+            height={100}
+          />
         </div>
       </div>
 
-      <div className="flex flex-col items-center bg-red-600 py-4">
-        <form
-          onSubmit={handleSearchSubmit}
-          className="flex flex-col items-center sm:flex-row sm:space-x-2 w-full sm:justify-center px-4"
-        >
-          <input
-            type="text"
-            placeholder="Rechercher..."
-            value={searchQuery}
-            onChange={handleSearchChange}
-            className="searchInput"
-          />
-
-          <button
-            type="submit"
-            onClick={() => setSearchType("plat")}
-            className="searchButton"
-          >
-            Rechercher un plat
-          </button>
-          <button
-            type="submit"
-            onClick={() => setSearchType("chef")}
-            className="searchButton"
-          >
-            Rechercher un chef
-          </button>
-          <button
-            type="submit"
-            onClick={() => setSearchType("cuisine")}
-            className="searchButton"
-          >
-            Rechercher une cuisine
-          </button>
-        </form>
+      {/* Bandeau rouge avec la zone de recherche */}
+      <div className="bg-red-600 py-10 flex justify-center">
+        <div className="bg-white w-full max-w-md p-4 rounded shadow-lg">
+          <form onSubmit={handleSearchSubmit} className="flex flex-col">
+            <input
+              type="text"
+              placeholder="Rechercher..."
+              value={searchQuery}
+              onChange={handleSearchChange}
+              className="p-2 border border-gray-300 rounded focus:bg-black focus:text-white w-full"
+            />
+            <div className="mt-4 flex flex-col sm:flex-row sm:space-x-2">
+              <button
+                type="submit"
+                onClick={() => setSearchType('plat')}
+                className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition-colors mt-2 sm:mt-0"
+              >
+                Rechercher un plat
+              </button>
+              <button
+                type="submit"
+                onClick={() => setSearchType('chef')}
+                className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition-colors mt-2 sm:mt-0"
+              >
+                Rechercher un chef
+              </button>
+              <button
+                type="submit"
+                onClick={() => setSearchType('cuisine')}
+                className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition-colors mt-2 sm:mt-0"
+              >
+                Rechercher une cuisine
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
 
-      <div className="results-container">
+      <div className="results-container bg-red-600">
         {results.length > 0 ? (
           results.map((result, index) => (
             <div key={index} className="result-container">
@@ -128,7 +135,7 @@ const YourComponent = () => {
             </div>
           ))
         ) : (
-          <p>Aucun résultat trouvé.</p>
+          <p className="bg-white shadow-lg rounded py-4  text-gray-700 text-center">Aucun résultat trouvé.</p>
         )}
       </div>
     </div>
