@@ -1,7 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { fetchPlatData } from '../requetes'; // Assurez-vous que le chemin est correct
+import { fetchPlatData } from '../../requetes'; // Ajustez le chemin si nécessaire
+import { cleanDbpediaResource } from '../../requetes'; // Ajustez le chemin selon l'architecture de votre projet
+
 
 export default function ProfilPage({ params }) {
   const [plat, setPlat] = useState(null);
@@ -11,8 +13,9 @@ export default function ProfilPage({ params }) {
   useEffect(() => {
     async function fetchData() {
       try {
-        // Récupération explicite de `params`
-        const name = params?.name;
+        // Résolution explicite de `params` car c'est une Promise dans votre contexte
+        const resolvedParams = await params;
+        const name = resolvedParams?.name; // Récupération du nom du plat
 
         if (!name) {
           throw new Error('Aucun nom fourni dans les paramètres.');
@@ -36,26 +39,32 @@ export default function ProfilPage({ params }) {
   if (error) return <p>Erreur : {error}</p>;
 
   return (
+   
     <div style={styles.container}>
-      <div style={styles.imageContainer}>
-        {plat.image && <img src={plat.image} alt={plat.nom} style={styles.image} />}
-      </div>
-      <div style={styles.detailsContainer}>
-        <h1 style={styles.title}>{plat.nom}</h1>
-        <p style={styles.description}>{plat.description}</p>
-        <p style={styles.origin}>
-          <strong>Origine :</strong> {plat.origine}
-        </p>
-        <h2 style={styles.subtitle}>Ingrédients :</h2>
-        <ul style={styles.ingredientsList}>
-          {plat.ingredients.map((ingredient, index) => (
-            <li key={index} style={styles.ingredient}>
-              {ingredient}
-            </li>
-          ))}
-        </ul>
-      </div>
+    <div style={styles.imageContainer}>
+      {plat.image && <img src={plat.image} alt={plat.nom} style={styles.image} />}
     </div>
+    <div style={styles.detailsContainer}>
+      <h1 style={styles.title}>{plat.nom}</h1>
+      <p style={styles.description}>{plat.description}</p>
+      <p style={styles.origin}>
+        <strong>Origine :</strong> {plat.origine ? cleanDbpediaResource(plat.origine) : 'Origine inconnue'}
+      </p>
+      <h2 style={styles.subtitle}>Ingrédients :</h2>
+      <ul style={styles.ingredientsList}>
+        {plat.ingredients.length > 0 ? (
+          plat.ingredients.map((ingredient, index) => (
+            <li key={index} style={styles.ingredient}>
+              {cleanDbpediaResource(ingredient)}
+            </li>
+          ))
+        ) : (
+          <li>Aucun ingrédient disponible.</li>
+        )}
+      </ul>
+    </div>
+  </div>
+  
   );
 }
 
