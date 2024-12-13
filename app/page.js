@@ -9,6 +9,7 @@ import {
   generateSparqlQueryCuisine,
 } from "./requetes";
 import "./styles/styles.css";
+import Link from "next/link";
 
 const YourComponent = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -189,6 +190,7 @@ const YourComponent = () => {
                 key={index}
                 className="result-container border-b-8 border-red-600 last:border-none -mx-4 py-3"
               >
+              <Link href={`/result/${result.dish?.value || result.chef?.value || result.cuisine?.value}`}>
                 <img
                   src={result.image?.value}
                   alt={
@@ -210,6 +212,7 @@ const YourComponent = () => {
                       "Description indisponible"}
                   </p>
                 </div>
+                </Link>
               </div>
             ))
           ) : (
