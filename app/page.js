@@ -85,18 +85,18 @@ const YourComponent = () => {
           <Image src="/logo.svg" alt="Logo" width={100} height={100} />
         </div>
       </div>
-
+  
       {/* Bandeau rouge avec la zone de recherche */}
       <div className="bg-red-600 py-10 flex justify-center relative">
-        <div className="bg-white w-full max-w-md p-4 rounded shadow-lg">
-          <form onSubmit={handleSearchSubmit} className="flex flex-col">
-            <div className="relative w-full">
+        <div className="bg-white w-full max-w-4xl p-4 rounded shadow-lg">
+          <form onSubmit={handleSearchSubmit} className="flex items-center">
+            <div className="relative flex-grow">
               <input
                 type="text"
                 placeholder="Rechercher..."
                 value={searchQuery}
                 onChange={handleSearchChange}
-                className="p-2 border border-gray-300 rounded focus:bg-black focus:text-white w-full"
+                className="p-3 border border-gray-300 rounded focus:bg-black focus:text-white w-full"
               />
               {/* Suggestions */}
               {suggestions.plats.length > 0 || suggestions.chefs.length > 0 || suggestions.cuisines.length > 0 ? (
@@ -155,25 +155,25 @@ const YourComponent = () => {
                 </div>
               ) : null}
             </div>
-            <div className="mt-4 flex flex-col sm:flex-row sm:space-x-2">
+            <div className="ml-4 flex flex-col sm:flex-row sm:space-x-2">
               <button
                 type="submit"
                 onClick={() => setSearchType("plat")}
-                className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition-colors mt-2 sm:mt-0"
+                className="bg-black text-white px-2 py-3 rounded hover:bg-gray-800 transition-colors mt-2 sm:mt-0"
               >
                 Rechercher un plat
               </button>
               <button
                 type="submit"
                 onClick={() => setSearchType("chef")}
-                className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition-colors mt-2 sm:mt-0"
+                className="bg-black text-white px-2 py-3 rounded hover:bg-gray-800 transition-colors mt-2 sm:mt-0"
               >
                 Rechercher un chef
               </button>
               <button
                 type="submit"
                 onClick={() => setSearchType("cuisine")}
-                className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition-colors mt-2 sm:mt-0"
+                className="bg-black text-white px-2 py-3 rounded hover:bg-gray-800 transition-colors mt-2 sm:mt-0"
               >
                 Rechercher une cuisine
               </button>
@@ -219,6 +219,7 @@ const YourComponent = () => {
       </div>
     </div>
   );
+  
 };
 
 export default YourComponent;
