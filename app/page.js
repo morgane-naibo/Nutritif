@@ -194,7 +194,12 @@ const YourComponent = () => {
                 key={index}
                 className="result-container border-b-8 border-red-600 last:border-none -mx-4 py-3"
               >
-              <Link href={`/profil/${result.dishLabel?.value || result.chefLabel?.value || result.cuisineLabel?.value}`}>
+              <Link
+                  href={`/profil/${result.dishLabel ? '' : result.chefLabel ? 'chef' : 'cuisine'}/${encodeURIComponent(
+                    result.dishLabel?.value || result.chefLabel?.value || result.cuisineLabel?.value
+                  )}`}
+                >
+                  {result.dishLabel?.value || result.chefLabel?.value || result.cuisineLabel?.value}
                 <img
                   src={result.image?.value}
                   alt={

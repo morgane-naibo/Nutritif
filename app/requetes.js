@@ -162,9 +162,12 @@ export function generateSparqlQueryPlat(plat) {
   }
   
   export async function fetchPlatData(name) {
-    const url = `https://dbpedia.org/sparql?query=${encodeURIComponent(
-      requete_profil_plat(name)
-    )}&format=json`;
+    // Décoder les caractères spéciaux dans l'URL
+  const decodedName = decodeURIComponent(name);
+
+  const url = `https://dbpedia.org/sparql?query=${encodeURIComponent(
+    requete_profil_plat(decodedName)
+  )}&format=json`;
   
     try {
       const response = await fetch(url);
@@ -191,19 +194,22 @@ export function generateSparqlQueryPlat(plat) {
       throw error;
     }
   }
+
+
   export async function fetchChefData(chefName) {
+    // Décoder les caractères encodés dans l'URL
+    const decodedChefName = decodeURIComponent(chefName);
+  
     const url = `https://dbpedia.org/sparql?query=${encodeURIComponent(
-      generateSparqlQueryChef(chefName)
+      generateSparqlQueryChef(decodedChefName)
     )}&format=json`;
   
     try {
       const response = await fetch(url);
       const json = await response.json();
   
-      console.log('Résultats SPARQL pour le chef :', json.results.bindings); // Debugging
-  
       if (!json.results.bindings.length) {
-        throw new Error(`Aucun résultat trouvé pour ce chef : "${chefName}".`);
+        throw new Error(`Aucun résultat trouvé pour le chef : "${decodedChefName}".`);
       }
   
       const result = json.results.bindings[0];
@@ -211,7 +217,7 @@ export function generateSparqlQueryPlat(plat) {
       return {
         nom: result.chefLabel?.value || 'Nom inconnu',
         description: result.description?.value || 'Pas de description disponible.',
-        dateNaissance: result.birthDate?.value || 'Date de naissance inconnue',
+        dateNaissance: result.naissance?.value || 'Date de naissance inconnue',
         lieuNaissance: result.birthPlace?.value || 'Lieu de naissance inconnu',
         image: result.image?.value || null,
       };
