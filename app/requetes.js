@@ -136,3 +136,88 @@ export function generateSparqlQueryPlat(plat) {
     setResults(data);
   };
   
+  export function requete_profil_plat(nom) {
+    return `
+      SELECT DISTINCT ?name ?description ?origin ?ingredient ?image
+      WHERE {
+        ?dish a dbo:Food ;
+              rdfs:label ?name ;
+              dbo:abstract ?description ;
+              dbo:country ?origin ;
+              dbo:ingredient ?ingredient ;
+              dbo:thumbnail ?image .
+        FILTER (lang(?description) = "fr") # Si la description française n'existe pas, remplacez par "en"
+        FILTER (CONTAINS(LCASE(STR(?name)), LCASE("${nom}")))
+      }
+    `;
+  }
+  
+  // Fonction pour nettoyer une URL en ne gardant que le dernier segment
+  export function cleanDbpediaResource(url) {
+    if (url) {
+      const segments = url.split('/');
+      return segments[segments.length - 1].replace(/_/g, ' '); // Supprime les underscores et garde la fin
+    }
+    return 'Inconnu'; // Retourne une valeur par défaut si l'URL est invalide
+  }
+  
+  export async function fetchPlatData(name) {
+    const url = `https://dbpedia.org/sparql?query=${encodeURIComponent(
+      requete_profil_plat(name)
+    )}&format=json`;
+  
+    try {
+      const response = await fetch(url);
+      const json = await response.json();
+  
+      if (!json.results.bindings.length) {
+        throw new Error('Aucun résultat trouvé.');
+      }
+  
+      const ingredients = json.results.bindings
+        .filter((binding) => binding.ingredient?.value)
+        .map((binding) => cleanDbpediaResource(binding.ingredient.value));
+  
+      const result = json.results.bindings[0];
+  
+      return {
+        nom: result.name?.value || 'Nom inconnu',
+        description: result.description?.value || 'Pas de description disponible.',
+        origine: cleanDbpediaResource(result.origin?.value),
+        ingredients: [...new Set(ingredients)],
+        image: result.image?.value || null,
+      };
+    } catch (error) {
+      throw error;
+    }
+  }
+  export async function fetchChefData(chefName) {
+    const url = `https://dbpedia.org/sparql?query=${encodeURIComponent(
+      generateSparqlQueryChef(chefName)
+    )}&format=json`;
+  
+    try {
+      const response = await fetch(url);
+      const json = await response.json();
+  
+      console.log('Résultats SPARQL pour le chef :', json.results.bindings); // Debugging
+  
+      if (!json.results.bindings.length) {
+        throw new Error(`Aucun résultat trouvé pour ce chef : "${chefName}".`);
+      }
+  
+      const result = json.results.bindings[0];
+  
+      return {
+        nom: result.chefLabel?.value || 'Nom inconnu',
+        description: result.description?.value || 'Pas de description disponible.',
+        dateNaissance: result.birthDate?.value || 'Date de naissance inconnue',
+        lieuNaissance: result.birthPlace?.value || 'Lieu de naissance inconnu',
+        image: result.image?.value || null,
+      };
+    } catch (error) {
+      console.error('Erreur lors de la récupération des données du chef :', error);
+      throw error;
+    }
+  }
+  

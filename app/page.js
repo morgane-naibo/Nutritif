@@ -22,16 +22,19 @@ const YourComponent = () => {
   const [searchType, setSearchType] = useState("plat");
   const suggestionsRef = useRef(null);
 
+    // Fonction pour gérer le changement dans le champ de recherche
   const handleSearchChange = async (e) => {
     const value = e.target.value;
     setSearchQuery(value);
     if (value.length > 2) {
+      // Lancer des requêtes pour les plats, chefs et cuisines
       const [plats, chefs, cuisines] = await Promise.all([
         fetchSparqlResults(generateSparqlQueryPlat(value)),
         fetchSparqlResults(generateSparqlQueryChef(value)),
         fetchSparqlResults(generateSparqlQueryCuisine(value)),
       ]);
 
+      // Mettre à jour les suggestions classées par catégorie
       setSuggestions({
         plats: plats.slice(0, 5).map((result) => result.dishLabel?.value || ""),
         chefs: chefs.slice(0, 5).map((result) => result.chefLabel?.value || ""),
@@ -40,6 +43,7 @@ const YourComponent = () => {
           .map((result) => result.cuisineLabel?.value || ""),
       });
     } else {
+      // Réinitialiser les suggestions si la saisie est trop courte
       setSuggestions({ plats: [], chefs: [], cuisines: [] });
     }
   };
@@ -190,7 +194,7 @@ const YourComponent = () => {
                 key={index}
                 className="result-container border-b-8 border-red-600 last:border-none -mx-4 py-3"
               >
-              <Link href={`/${result.dishLabel?.value || result.chefLabel?.value || result.cuisineLabel?.value}`}>
+              <Link href={`/profil/${result.dishLabel?.value || result.chefLabel?.value || result.cuisineLabel?.value}`}>
                 <img
                   src={result.image?.value}
                   alt={
