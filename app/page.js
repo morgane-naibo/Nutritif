@@ -22,7 +22,7 @@ const YourComponent = () => {
   const [searchType, setSearchType] = useState("plat");
   const suggestionsRef = useRef(null);
 
-    // Fonction pour gérer le changement dans le champ de recherche
+  // Fonction pour gérer le changement dans le champ de recherche
   const handleSearchChange = async (e) => {
     const value = e.target.value;
     setSearchQuery(value);
@@ -84,14 +84,14 @@ const YourComponent = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-red-600">
-      {/* Bandeau blanc avec le logo centré */}
+    
       <div className="w-full bg-white flex justify-center items-center py-14 px-12 relative">
         <div className="absolute left-0 right-0 flex justify-center">
           <Image src="/logo.svg" alt="Logo" width={100} height={100} />
         </div>
       </div>
-  
-      {/* Bandeau rouge avec la zone de recherche */}
+
+      
       <div className="bg-red-600 py-10 flex justify-center relative">
         <div className="bg-white w-full max-w-4xl p-4 rounded shadow-lg">
           <form onSubmit={handleSearchSubmit} className="flex items-center">
@@ -103,7 +103,7 @@ const YourComponent = () => {
                 onChange={handleSearchChange}
                 className="p-3 border border-gray-300 rounded focus:bg-black focus:text-white w-full"
               />
-              {/* Suggestions */}
+            
               {suggestions.plats.length > 0 || suggestions.chefs.length > 0 || suggestions.cuisines.length > 0 ? (
                 <div
                   ref={suggestionsRef}
@@ -186,6 +186,8 @@ const YourComponent = () => {
           </form>
         </div>
       </div>
+
+     
       <div className="bg-red-600 min-h-screen pt-10 flex flex-col items-center">
         <div className="results-container bg-white p-4 rounded shadow-lg w-11/12 sm:w-2/3 lg:w-1/2">
           {results.length > 0 ? (
@@ -194,33 +196,55 @@ const YourComponent = () => {
                 key={index}
                 className="result-container border-b-8 border-red-600 last:border-none -mx-4 py-3"
               >
-              <Link
-                  href={`/profil/${result.dishLabel ? '' : result.chefLabel ? 'chef' : 'cuisine'}/${encodeURIComponent(
+                <Link
+                  href={`/profil/${encodeURIComponent(
                     result.dishLabel?.value || result.chefLabel?.value || result.cuisineLabel?.value
-                  )}`}
+                  )}?type=${result.dishLabel ? 'plat' : result.chefLabel ? 'chef' : 'cuisine'}`}
+                  className="flex flex-col sm:flex-row items-start"
                 >
-                  {result.dishLabel?.value || result.chefLabel?.value || result.cuisineLabel?.value}
-                <img
-                  src={result.image?.value}
-                  alt={
-                    result.dishLabel?.value ||
-                    result.chefLabel?.value ||
-                    result.cuisineLabel?.value
-                  }
-                  className="result-image"
-                />
-                <div className="result-text-container">
-                  <h2 className="result-dish-label">
-                    {result.dishLabel?.value ||
-                      result.chefLabel?.value ||
-                      result.cuisineLabel?.value}
-                  </h2>
-                  <p className="result-abstract">
-                    {result.abstract?.value ||
-                      result.description?.value ||
-                      "Description indisponible"}
-                  </p>
-                </div>
+                  {result.image?.value && (
+                    <img
+                      src={result.image?.value}
+                      alt={
+                        result.dishLabel?.value ||
+                        result.chefLabel?.value ||
+                        result.cuisineLabel?.value
+                      }
+                      className="result-image w-full sm:w-40 h-auto rounded"
+                    />
+                  )}
+                  <div className="result-text-container sm:ml-4 mt-4 sm:mt-0">
+                    <h2 className="result-dish-label text-xl font-bold text-gray-800">
+                      {result.dishLabel?.value || result.chefLabel?.value || result.cuisineLabel?.value}
+                    </h2>
+                    <p className="result-abstract text-gray-600 mt-2">
+                      {result.abstract?.value || result.description?.value || "Description indisponible"}
+                    </p>
+                    
+                  
+                    {result.ingredients && Array.isArray(result.ingredients) && (
+                      <div className="ingredients-section mt-4">
+                       <h3 style={{ fontWeight: "bold", marginTop: "10px" }}>Ingrédients :</h3>
+                      <ul style={{ listStyleType: "disc", paddingLeft: "20px" }}>
+                        {result.ingredients?.map((ingredient, idx) => (
+                          <li key={idx} style={{ fontSize: "16px", color: "#555" }}>
+                            {ingredient.value} 
+                          </li>
+                        ))}
+                      </ul>
+
+                      </div>
+                    )}
+
+
+                 
+                    {result.origine && (
+                        <p style={{ marginTop: "10px", fontSize: "16px", color: "#777" }}>
+                          <strong>Origine :</strong> {result.origine.value || result.origine}
+                        </p>
+                      )}
+
+                  </div>
                 </Link>
               </div>
             ))
@@ -231,7 +255,6 @@ const YourComponent = () => {
       </div>
     </div>
   );
-  
 };
 
 export default YourComponent;

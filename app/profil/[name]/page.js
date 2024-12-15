@@ -1,23 +1,23 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams, useSearchParams } from 'next/navigation'; // Importer les hooks nécessaires
-import { fetchPlatData, fetchChefData, cleanDbpediaResource } from '../../requetes';
+import { useParams, useSearchParams } from 'next/navigation';
+import { fetchPlatData, fetchChefData, fetchCuisineData, cleanDbpediaResource, formatDateISO } from '../../requetes';
 
 export default function ProfilPage() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Récupération des paramètres dynamiques via les hooks
-  const params = useParams();
-  const searchParams = useSearchParams();
+  // Récupération des paramètres
+  const params = useParams(); // Ex: { name: 'GordonRamsay' }
+  const searchParams = useSearchParams(); // Ex: type=chef
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const { name } = params; // Récupération du nom depuis l'URL
-        const type = searchParams.get('type'); // Récupération du "type" dans la query string
+        const name = params?.name;
+        const type = searchParams.get('type'); // Récupérer "type"
 
         if (!name || !type) {
           throw new Error('Nom ou type manquant dans les paramètres.');
@@ -25,13 +25,14 @@ export default function ProfilPage() {
 
         let fetchedData;
 
-        // Appels en fonction du type (plat ou chef)
         if (type === 'plat') {
           fetchedData = await fetchPlatData(name);
         } else if (type === 'chef') {
           fetchedData = await fetchChefData(name);
+        } else if (type === 'cuisine') {
+          fetchedData = await fetchCuisineData(name);
         } else {
-          throw new Error('Type invalide. Utilisez "plat" ou "chef".');
+          throw new Error('Type invalide. Utilisez "plat", "chef" ou "cuisine".');
         }
 
         setData(fetchedData);
@@ -53,38 +54,58 @@ export default function ProfilPage() {
     <div style={styles.container}>
       <div style={styles.imageContainer}>
         {data.image && <img src={data.image} alt={data.nom} style={styles.image} />}
+        {/* Informations spécifiques pour les chefs et les cuisines sous la photo */}
+        {(searchParams.get('type') === 'chef' || searchParams.get('type') === 'cuisine') && (
+          <div style={styles.additionalInfo}>
+            {searchParams.get('type') === 'chef' && (
+              <>
+                {data.dateNaissance && (
+                  <p style={styles.detail}>
+                    <strong>Date de naissance :</strong> {formatDateISO(data.dateNaissance)}
+                  </p>
+                )}
+                {data.lieuNaissance && (
+                  <p style={styles.detail}>
+                    <strong>Lieu de naissance :</strong> {cleanDbpediaResource(data.lieuNaissance)}
+                  </p>
+                )}
+              </>
+            )}
+            {searchParams.get('type') === 'cuisine' && (
+              <>
+                {data.description && (
+                  <p style={styles.detail}>
+                    <strong>Description :</strong> {data.description}
+                  </p>
+                )}
+              </>
+            )}
+          </div>
+        )}
       </div>
       <div style={styles.detailsContainer}>
         <h1 style={styles.title}>{data.nom}</h1>
         <p style={styles.description}>{data.description}</p>
 
-        {/* Affichage conditionnel pour le type */}
-        {searchParams.get('type') === 'chef' ? (
+        {/* Affichage conditionnel pour les plats */}
+        {searchParams.get('type') === 'plat' && (
           <>
             <p style={styles.origin}>
-              <strong>Date de naissance :</strong> {data.dateNaissance}
-            </p>
-            <p style={styles.origin}>
-              <strong>Lieu de naissance :</strong> {data.lieuNaissance}
-            </p>
-          </>
-        ) : (
-          <>
-            <p style={styles.origin}>
-              <strong>Origine :</strong> {data.origine ? cleanDbpediaResource(data.origine) : 'Origine inconnue'}
+              <strong>Origine :</strong> {data.origine || 'Origine inconnue'}
             </p>
             <h2 style={styles.subtitle}>Ingrédients :</h2>
-            <ul style={styles.ingredientsList}>
-              {data.ingredients?.length > 0 ? (
-                data.ingredients.map((ingredient, index) => (
-                  <li key={index} style={styles.ingredient}>
-                    {cleanDbpediaResource(ingredient)}
-                  </li>
-                ))
-              ) : (
-                <li>Aucun ingrédient disponible.</li>
-              )}
-            </ul>
+            <p style={styles.ingredients}>
+              {data.ingredients || 'Aucun ingrédient disponible.'}
+            </p>
+          </>
+        )}
+
+        {/* Affichage conditionnel pour les cuisines */}
+        {searchParams.get('type') === 'cuisine' && (
+          <>
+            <p style={styles.origin}>
+              <strong>Description :</strong> {data.description || 'Aucune description disponible.'}
+            </p>
           </>
         )}
       </div>
@@ -115,6 +136,16 @@ const styles = {
     borderRadius: '10px',
     objectFit: 'cover',
   },
+  additionalInfo: {
+    marginTop: '10px',
+    fontSize: '16px',
+    color: '#555',
+  },
+  detail: {
+    marginBottom: '5px',
+    fontSize: '16px',
+    lineHeight: '1.5',
+  },
   detailsContainer: {
     flex: '2',
   },
@@ -140,11 +171,7 @@ const styles = {
     marginBottom: '10px',
     color: '#333',
   },
-  ingredientsList: {
-    listStyleType: 'disc',
-    paddingLeft: '20px',
-  },
-  ingredient: {
+  ingredients: {
     fontSize: '16px',
     color: '#555',
   },
