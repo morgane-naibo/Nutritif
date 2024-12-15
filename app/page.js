@@ -195,10 +195,10 @@ const YourComponent = () => {
                 className="result-container flex border-b-8 border-red-600 last:border-none -mx-4 py-3"
               >
                 <Link
-                    href={`/profil/${result.dishLabel ? '' : result.chefLabel ? 'chef' : 'cuisine'}/${encodeURIComponent(
+                    href={`/profil/${encodeURIComponent(
                       result.dishLabel?.value || result.chefLabel?.value || result.cuisineLabel?.value
-                    )}`}
-                >
+                    )}?type=${result.dishLabel ? 'plat' : result.chefLabel ? 'chef' : 'cuisine'}`}
+                  >
                 <img
                   src={result.image?.value}
                   alt={
@@ -210,10 +210,10 @@ const YourComponent = () => {
                 />
                 </Link>
                 <div className="result-text-container">
-                  <Link
-                    href={`/profil/${result.dishLabel ? '' : result.chefLabel ? 'chef' : 'cuisine'}/${encodeURIComponent(
+                <Link
+                    href={`/profil/${encodeURIComponent(
                       result.dishLabel?.value || result.chefLabel?.value || result.cuisineLabel?.value
-                    )}`}
+                    )}?type=${result.dishLabel ? 'plat' : result.chefLabel ? 'chef' : 'cuisine'}`}
                   >
                     <h2 className="result-dish-label text-xl font-bold">
                       {result.dishLabel?.value ||

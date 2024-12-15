@@ -1,29 +1,40 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { fetchPlatData } from '../../requetes'; // Ajustez le chemin si nécessaire
-import { cleanDbpediaResource } from '../../requetes'; // Ajustez le chemin selon l'architecture de votre projet
+import { useParams, useSearchParams } from 'next/navigation'; // Importer les hooks nécessaires
+import { fetchPlatData, fetchChefData, cleanDbpediaResource } from '../../requetes';
 
-
-export default function ProfilPage({ params }) {
-  const [plat, setPlat] = useState(null);
+export default function ProfilPage() {
+  const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Récupération des paramètres dynamiques via les hooks
+  const params = useParams();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     async function fetchData() {
       try {
-        // Résolution explicite de `params` car c'est une Promise dans votre contexte
-        const resolvedParams = await params;
-        const name = resolvedParams?.name; // Récupération du nom du plat
+        const { name } = params; // Récupération du nom depuis l'URL
+        const type = searchParams.get('type'); // Récupération du "type" dans la query string
 
-        if (!name) {
-          throw new Error('Aucun nom fourni dans les paramètres.');
+        if (!name || !type) {
+          throw new Error('Nom ou type manquant dans les paramètres.');
         }
 
-        // Appel à la fonction pour récupérer les données du plat
-        const data = await fetchPlatData(name);
-        setPlat(data);
+        let fetchedData;
+
+        // Appels en fonction du type (plat ou chef)
+        if (type === 'plat') {
+          fetchedData = await fetchPlatData(name);
+        } else if (type === 'chef') {
+          fetchedData = await fetchChefData(name);
+        } else {
+          throw new Error('Type invalide. Utilisez "plat" ou "chef".');
+        }
+
+        setData(fetchedData);
         setLoading(false);
       } catch (err) {
         console.error('Erreur lors de la récupération des données :', err);
@@ -33,38 +44,51 @@ export default function ProfilPage({ params }) {
     }
 
     fetchData();
-  }, [params]);
+  }, [params, searchParams]);
 
   if (loading) return <p>Chargement...</p>;
   if (error) return <p>Erreur : {error}</p>;
 
   return (
-   
     <div style={styles.container}>
-    <div style={styles.imageContainer}>
-      {plat.image && <img src={plat.image} alt={plat.nom} style={styles.image} />}
-    </div>
-    <div style={styles.detailsContainer}>
-      <h1 style={styles.title}>{plat.nom}</h1>
-      <p style={styles.description}>{plat.description}</p>
-      <p style={styles.origin}>
-        <strong>Origine :</strong> {plat.origine ? cleanDbpediaResource(plat.origine) : 'Origine inconnue'}
-      </p>
-      <h2 style={styles.subtitle}>Ingrédients :</h2>
-      <ul style={styles.ingredientsList}>
-        {plat.ingredients.length > 0 ? (
-          plat.ingredients.map((ingredient, index) => (
-            <li key={index} style={styles.ingredient}>
-              {cleanDbpediaResource(ingredient)}
-            </li>
-          ))
+      <div style={styles.imageContainer}>
+        {data.image && <img src={data.image} alt={data.nom} style={styles.image} />}
+      </div>
+      <div style={styles.detailsContainer}>
+        <h1 style={styles.title}>{data.nom}</h1>
+        <p style={styles.description}>{data.description}</p>
+
+        {/* Affichage conditionnel pour le type */}
+        {searchParams.get('type') === 'chef' ? (
+          <>
+            <p style={styles.origin}>
+              <strong>Date de naissance :</strong> {data.dateNaissance}
+            </p>
+            <p style={styles.origin}>
+              <strong>Lieu de naissance :</strong> {data.lieuNaissance}
+            </p>
+          </>
         ) : (
-          <li>Aucun ingrédient disponible.</li>
+          <>
+            <p style={styles.origin}>
+              <strong>Origine :</strong> {data.origine ? cleanDbpediaResource(data.origine) : 'Origine inconnue'}
+            </p>
+            <h2 style={styles.subtitle}>Ingrédients :</h2>
+            <ul style={styles.ingredientsList}>
+              {data.ingredients?.length > 0 ? (
+                data.ingredients.map((ingredient, index) => (
+                  <li key={index} style={styles.ingredient}>
+                    {cleanDbpediaResource(ingredient)}
+                  </li>
+                ))
+              ) : (
+                <li>Aucun ingrédient disponible.</li>
+              )}
+            </ul>
+          </>
         )}
-      </ul>
+      </div>
     </div>
-  </div>
-  
   );
 }
 

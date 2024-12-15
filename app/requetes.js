@@ -229,3 +229,12 @@ export function generateSparqlQueryPlat(plat) {
     }
   }
   
+
+export function formatDateISO(dateISO) {
+  const mois = [
+    'janvier', 'février', 'mars', 'avril', 'mai', 'juin',
+    'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'
+  ];
+  const [year, month, day] = dateISO.split('-');
+  return `${parseInt(day)} ${mois[parseInt(month) - 1]} ${year}`;
+}
