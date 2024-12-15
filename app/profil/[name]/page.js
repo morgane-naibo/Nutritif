@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'next/navigation'; // Importer les hooks nécessaires
 import { fetchPlatData, fetchChefData, cleanDbpediaResource } from '../../requetes';
+import Image from "next/image";
 
 export default function ProfilPage() {
   const [data, setData] = useState(null);
@@ -50,6 +51,14 @@ export default function ProfilPage() {
   if (error) return <p>Erreur : {error}</p>;
 
   return (
+    <div className="min-h-screen flex flex-col bg-red-600">
+          {/* Bandeau blanc avec le logo centré */}
+          <div className="w-full bg-white flex justify-center items-center py-14 px-12 relative">
+            <div className="absolute left-0 right-0 flex justify-center">
+              <Image src="/logo.svg" alt="Logo" width={100} height={100} />
+            </div>
+          </div>
+      
     <div style={styles.container}>
       <div style={styles.imageContainer}>
         {data.image && <img src={data.image} alt={data.nom} style={styles.image} />}
@@ -88,6 +97,7 @@ export default function ProfilPage() {
           </>
         )}
       </div>
+    </div>
     </div>
   );
 }

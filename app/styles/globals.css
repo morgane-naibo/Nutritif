@@ -20,4 +20,31 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* Styles pour le bandeau rouge */
+.bandeau-rouge {
+  background-color: #dc2626; /* Rouge (correspond à bg-red-600 de Tailwind) */
+  min-height: 100vh; /* S'étend sur toute la hauteur de l'écran */
+  display: flex;
+  flex-direction: column;
+}
+
+/* Styles pour le bandeau blanc */
+.bandeau-blanc {
+  background-color: #ffffff; /* Blanc */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 3.5rem 3rem; /* Correspond à py-14 px-12 */
+  position: relative;
+}
+
+/* Styles pour le logo */
+.logo {
+  position: absolute;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+}
+
 
