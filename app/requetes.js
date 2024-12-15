@@ -8,7 +8,7 @@ export function generateSparqlQueryPlat(plat) {
             rdfs:label ?dishLabel ;
             dbo:abstract ?abstract ;
             dbo:thumbnail ?image.
-      FILTER (LANG(?abstract) = "fr" && LANG(?dishLabel) = "fr")
+      FILTER(LANG(?abstract) = "fr") 
       FILTER(CONTAINS(LCASE(?dishLabel), "${plat.toLowerCase()}"))
     }
     GROUP BY ?abstract
@@ -16,23 +16,26 @@ export function generateSparqlQueryPlat(plat) {
   `;
 }
 
-
   // Fonction pour générer la requête SPARQL pour DBpedia en fonction du terme de recherche
   export function generateSparqlQueryChef(chef) {
-    const chefName = chef.replace(/^chef\s+/i, '').trim();
-
-    // Requête SPARQL pour rechercher un chef dans DBpedia
+    const chefName = chef.trim().replace(/%20/g, ' '); // Remplace les %20 par des espaces
+  
     return `
-    SELECT DISTINCT ?chef ?chefLabel ?naissance ?description ?image
-    WHERE {
-      ?chef a dbo:Chef ;
-      rdfs:label ?chefLabel ;
-      dbo:birthDate ?naissance ;
-      dbo:thumbnail ?image;
-      dbo:abstract ?description .
-      FILTER (LANG(?description) = "fr" && LANG(?chefLabel) = "fr")
-      FILTER (CONTAINS(LCASE(?chefLabel), LCASE("${chefName}")))
-    }
+      SELECT DISTINCT ?chef ?chefLabel ?birthDate ?description ?birthPlace ?image
+      WHERE {
+        ?chef a dbo:Chef ;
+              rdfs:label ?chefLabel ;
+              dbo:abstract ?description .
+        OPTIONAL { ?chef dbo:birthDate ?birthDate. }
+        OPTIONAL { ?chef dbo:birthPlace ?birthPlace. }
+        OPTIONAL { ?chef dbo:thumbnail ?image. }
+        FILTER (
+          CONTAINS(LCASE(STR(?chefLabel)), LCASE("${chefName}")) &&
+          (LANG(?description) = "fr" || LANG(?description) = "en")
+        )
+        FILTER (LANG(?chefLabel) = "fr" || LANG(?chefLabel) = "en")
+      }
+      LIMIT 1
     `;
   }
 
@@ -107,7 +110,7 @@ export function generateSparqlQueryPlat(plat) {
     }).filter(Boolean); // Filtre les valeurs null/undefined
   }
 
-  const handleSearchChange = async (e) => {
+  /*const handleSearchChange = async (e) => {
     const value = e.target.value;
     setSearchQuery(value);
 
@@ -152,7 +155,7 @@ export function generateSparqlQueryPlat(plat) {
         FILTER (CONTAINS(LCASE(STR(?name)), LCASE("${nom}")))
       }
     `;
-  }
+  }*/
   
   // Fonction pour nettoyer une URL en ne gardant que le dernier segment
   export function cleanDbpediaResource(url) {
@@ -164,54 +167,50 @@ export function generateSparqlQueryPlat(plat) {
   }
   
   export async function fetchPlatData(name) {
-    // Décoder les caractères spéciaux dans l'URL
-  const decodedName = decodeURIComponent(name);
-
-  const url = `https://dbpedia.org/sparql?query=${encodeURIComponent(
-    requete_profil_plat(decodedName)
-  )}&format=json`;
-  
     try {
+      const url = `https://dbpedia.org/sparql?query=${encodeURIComponent(
+        generateSparqlQueryPlat(name)
+      )}&format=json`;
+  
       const response = await fetch(url);
       const json = await response.json();
   
       if (!json.results.bindings.length) {
-        throw new Error('Aucun résultat trouvé.');
+        throw new Error(`Aucun résultat trouvé pour "${name}".`);
       }
   
-      const ingredients = json.results.bindings
+      const ingredients = [...new Set(json.results.bindings
         .filter((binding) => binding.ingredient?.value)
-        .map((binding) => cleanDbpediaResource(binding.ingredient.value));
+        .map((binding) => cleanDbpediaResource(binding.ingredient.value))
+      )];
   
       const result = json.results.bindings[0];
   
       return {
-        nom: result.name?.value || 'Nom inconnu',
-        description: result.description?.value || 'Pas de description disponible.',
+        nom: result.dishLabel?.value || 'Nom inconnu',
+        description: result.abstract?.value || 'Pas de description disponible.',
         origine: cleanDbpediaResource(result.origin?.value),
-        ingredients: [...new Set(ingredients)],
+        ingredients,
         image: result.image?.value || null,
       };
     } catch (error) {
+      console.error('Erreur dans fetchPlatData :', error.message);
       throw error;
     }
   }
 
 
   export async function fetchChefData(chefName) {
-    // Décoder les caractères encodés dans l'URL
-    const decodedChefName = decodeURIComponent(chefName);
-  
-    const url = `https://dbpedia.org/sparql?query=${encodeURIComponent(
-      generateSparqlQueryChef(decodedChefName)
-    )}&format=json`;
-  
     try {
+      const url = `https://dbpedia.org/sparql?query=${encodeURIComponent(
+        generateSparqlQueryChef(chefName)
+      )}&format=json`;
+  
       const response = await fetch(url);
       const json = await response.json();
   
       if (!json.results.bindings.length) {
-        throw new Error(`Aucun résultat trouvé pour le chef : "${decodedChefName}".`);
+        throw new Error(`Aucun résultat trouvé pour "${chefName}".`);
       }
   
       const result = json.results.bindings[0];
@@ -219,12 +218,12 @@ export function generateSparqlQueryPlat(plat) {
       return {
         nom: result.chefLabel?.value || 'Nom inconnu',
         description: result.description?.value || 'Pas de description disponible.',
-        dateNaissance: result.naissance?.value || 'Date de naissance inconnue',
+        dateNaissance: result.birthDate?.value || 'Date de naissance inconnue',
         lieuNaissance: result.birthPlace?.value || 'Lieu de naissance inconnu',
         image: result.image?.value || null,
       };
     } catch (error) {
-      console.error('Erreur lors de la récupération des données du chef :', error);
+      console.error('Erreur dans fetchChefData :', error.message);
       throw error;
     }
   }
@@ -238,3 +237,12 @@ export function formatDateISO(dateISO) {
   const [year, month, day] = dateISO.split('-');
   return `${parseInt(day)} ${mois[parseInt(month) - 1]} ${year}`;
 }
+
+
+
+
+
+
+
+
+
