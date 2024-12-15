@@ -7,6 +7,7 @@ import {
   fetchSparqlResults,
   generateSparqlQueryChef,
   generateSparqlQueryCuisine,
+  cleanDbpediaResource,
 } from "./requetes";
 import "./styles/styles.css";
 import Link from "next/link";
@@ -67,6 +68,7 @@ const YourComponent = () => {
 
     const data = await fetchSparqlResults(query);
     setResults(data);
+    console.log(data);
   };
 
   useEffect(() => {
@@ -240,7 +242,7 @@ const YourComponent = () => {
                  
                     {result.origine && (
                         <p style={{ marginTop: "10px", fontSize: "16px", color: "#777" }}>
-                          <strong>Origine :</strong> {result.origine.value || result.origine}
+                          <strong>Origine :</strong> {cleanDbpediaResource(result.origine.value) || result.origine}
                         </p>
                       )}
 
