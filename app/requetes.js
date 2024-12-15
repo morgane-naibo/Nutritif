@@ -8,7 +8,7 @@ export function generateSparqlQueryPlat(plat) {
             rdfs:label ?dishLabel ;
             dbo:abstract ?abstract ;
             dbo:thumbnail ?image.
-      FILTER(LANG(?abstract) = "fr") 
+      FILTER (LANG(?abstract) = "fr" && LANG(?dishLabel) = "fr")
       FILTER(CONTAINS(LCASE(?dishLabel), "${plat.toLowerCase()}"))
     }
     GROUP BY ?abstract
@@ -135,6 +135,8 @@ export function generateSparqlQueryPlat(plat) {
     const data = await fetchSparqlResults(query);
     setResults(data);
   };
+
+  
   
   export function requete_profil_plat(nom) {
     return `

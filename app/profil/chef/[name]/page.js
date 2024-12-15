@@ -12,7 +12,8 @@ export default function ChefProfilPage({ params }) {
     async function fetchData() {
       try {
         // Récupération et décodage du paramètre de l'URL
-        const name = decodeURIComponent(params.name);
+        const resolvedParams = await params;
+        const name = resolvedParams?.name; // Récupération du nom du plat
 
         if (!name) {
           throw new Error('Aucun nom fourni dans les paramètres.');

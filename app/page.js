@@ -192,14 +192,13 @@ const YourComponent = () => {
             results.map((result, index) => (
               <div
                 key={index}
-                className="result-container border-b-8 border-red-600 last:border-none -mx-4 py-3"
+                className="result-container flex border-b-8 border-red-600 last:border-none -mx-4 py-3"
               >
-              <Link
-                  href={`/profil/${result.dishLabel ? '' : result.chefLabel ? 'chef' : 'cuisine'}/${encodeURIComponent(
-                    result.dishLabel?.value || result.chefLabel?.value || result.cuisineLabel?.value
-                  )}`}
+                <Link
+                    href={`/profil/${result.dishLabel ? '' : result.chefLabel ? 'chef' : 'cuisine'}/${encodeURIComponent(
+                      result.dishLabel?.value || result.chefLabel?.value || result.cuisineLabel?.value
+                    )}`}
                 >
-                  {result.dishLabel?.value || result.chefLabel?.value || result.cuisineLabel?.value}
                 <img
                   src={result.image?.value}
                   alt={
@@ -209,19 +208,25 @@ const YourComponent = () => {
                   }
                   className="result-image"
                 />
+                </Link>
                 <div className="result-text-container">
-                  <h2 className="result-dish-label">
-                    {result.dishLabel?.value ||
-                      result.chefLabel?.value ||
-                      result.cuisineLabel?.value}
-                  </h2>
-                  <p className="result-abstract">
+                  <Link
+                    href={`/profil/${result.dishLabel ? '' : result.chefLabel ? 'chef' : 'cuisine'}/${encodeURIComponent(
+                      result.dishLabel?.value || result.chefLabel?.value || result.cuisineLabel?.value
+                    )}`}
+                  >
+                    <h2 className="result-dish-label text-xl font-bold">
+                      {result.dishLabel?.value ||
+                        result.chefLabel?.value ||
+                        result.cuisineLabel?.value}
+                    </h2>
+                  </Link>
+                  <p className="result-abstract text-gray-600">
                     {result.abstract?.value ||
                       result.description?.value ||
                       "Description indisponible"}
                   </p>
                 </div>
-                </Link>
               </div>
             ))
           ) : (
