@@ -30,25 +30,55 @@ export function generateSparqlQueryPlat(plat) {
   `;
 }
 
-/*
-
 export function generateSparqlQueryCuisine(cuisine) {
-  const cleanedCuisine = cuisine.trim().replace(/%20/g, ' '); // Remplace %20 par un espace
   return `
     SELECT DISTINCT ?cuisineLabel ?abstract (SAMPLE(?image) AS ?image)
     WHERE {
       ?cuisine rdfs:label ?cuisineLabel .
       ?cuisine dbo:abstract ?abstract .
       OPTIONAL { ?cuisine dbo:thumbnail ?image. }
-      FILTER(CONTAINS(LCASE(?cuisineLabel), "${cleanedCuisine.toLowerCase()}") && LANG(?cuisineLabel) = "fr")
-      FILTER(LANG(?abstract) = "fr")
+      FILTER (
+        (LANG(?cuisineLabel) = "fr" && CONTAINS(LCASE(?cuisineLabel), "${cuisine.toLowerCase()}"))
+        || (LANG(?cuisineLabel) = "en" && CONTAINS(LCASE(?cuisineLabel), "${cuisine.toLowerCase()}"))
+      )
+      FILTER (LANG(?abstract) = "fr" || LANG(?abstract) = "en")
     }
-    LIMIT 1
+    LIMIT 5
   `;
 }
-*/
 
 
+
+export async function fetchCuisineData(cuisineName) {
+  try {
+    const query = generateSparqlQueryCuisine(cuisineName);
+    const url = `https://dbpedia.org/sparql?query=${encodeURIComponent(query)}&format=json`;
+
+    console.log("Requête SPARQL Cuisine :", query); // Log de la requête
+    const response = await fetch(url);
+    const json = await response.json();
+
+    if (!json.results.bindings.length) {
+      console.warn(`Aucun résultat trouvé pour "${cuisineName}"`);
+      return {
+        nom: cuisineName,
+        description: "Aucune donnée disponible pour cette cuisine.",
+        image: null,
+      };
+    }
+
+    const result = json.results.bindings[0];
+
+    return {
+      nom: result.cuisineLabel?.value || 'Nom inconnu',
+      description: result.abstract?.value || 'Pas de description disponible.',
+      image: result.image?.value || null,
+    };
+  } catch (error) {
+    console.error('Erreur dans fetchCuisineData :', error.message);
+    throw error;
+  }
+}
 
 
 export function generateSparqlQueryChef(chef) {
@@ -164,39 +194,6 @@ export async function fetchSparqlResults(query) {
   }
 }
 
-export async function fetchCuisineData(cuisineName) {
-  try {
-    const query = generateSparqlQueryCuisine(cuisineName);
-    const url = `https://dbpedia.org/sparql?query=${encodeURIComponent(query)}&format=json`;
-
-    console.log("Requête SPARQL Cuisine :", query); // Log
-    const response = await fetch(url);
-    const json = await response.json();
-    console.log("Réponse SPARQL Cuisine :", json); // Log
-
-    if (!json.results.bindings.length) {
-      console.warn(`Aucun résultat trouvé pour "${cuisineName}"`);
-      return {
-        nom: cuisineName,
-        description: "Aucune donnée disponible pour cette cuisine.",
-        image: null,
-      };
-    }
-    
-
-    const result = json.results.bindings[0];
-
-    return {
-      nom: result.cuisineLabel?.value || 'Nom inconnu',
-      description: result.description?.value || 'Pas de description disponible.',
-      image: result.image?.value || null,
-    };
-  } catch (error) {
-    console.error('Erreur dans fetchCuisineData :', error.message);
-    throw error;
-  }
-}
-
 
 export async function fetchSuggestions(query, type) {
   if (query.length < 3) {
@@ -252,22 +249,3 @@ const handleSearchSubmit = async (e) => {
   setResults(data);
 };
 
-export function generateSparqlQueryCuisine(pays) {
-  const paysName = pays.replace(/^cuisine\s+/i, '').trim();
-
-  // Requête SPARQL pour rechercher une cuisine dans DBpedia
-  return `
-    SELECT DISTINCT ?cuisine ?cuisineLabel ?description ?image
-    WHERE {
-      ?cuisine a dbo:Country ;
-      a owl:Thing ;
-      dbo:abstract ?description;
-      rdfs:label ?cuisineLabel;
-      dbo:thumbnail ?image;
-      dbo:wikiPageWikiLink ?dishes.
-      FILTER (LANG(?cuisineLabel) = "fr" && LANG(?description) = "fr")
-      FILTER (CONTAINS(LCASE(?cuisineLabel), LCASE("cuisine")) && CONTAINS(LCASE(?description), LCASE("${paysName}")))
-      FILTER (CONTAINS(LCASE(STR(?dishes)), LCASE(STR("dish"))))
-    }
-    `;
-}

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'next/navigation'; // Importer les hooks nécessaires
-import { fetchPlatData, fetchChefData, cleanDbpediaResource } from '../../requetes';
+import { fetchPlatData, fetchChefData, fetchCuisineData, cleanDbpediaResource, formatDateISO } from '../../requetes';
 import Image from "next/image";
 
 export default function ProfilPage() {
@@ -26,13 +26,15 @@ export default function ProfilPage() {
 
         let fetchedData;
 
-        // Appels en fonction du type (plat ou chef)
+        // Appels en fonction du type (plat, chef ou cuisine)
         if (type === 'plat') {
           fetchedData = await fetchPlatData(name);
         } else if (type === 'chef') {
           fetchedData = await fetchChefData(name);
+        } else if (type === 'cuisine') {
+          fetchedData = await fetchCuisineData(name); // Utilisation correcte
         } else {
-          throw new Error('Type invalide. Utilisez "plat" ou "chef".');
+          throw new Error('Type invalide. Utilisez "plat", "chef" ou "cuisine".');
         }
 
         setData(fetchedData);
@@ -52,52 +54,61 @@ export default function ProfilPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-red-600">
-          {/* Bandeau blanc avec le logo centré */}
-          <div className="w-full bg-white flex justify-center items-center py-14 px-12 relative">
-            <div className="absolute left-0 right-0 flex justify-center">
-              <Image src="/logo.svg" alt="Logo" width={100} height={100} />
-            </div>
-          </div>
-      
-    <div style={styles.container}>
-      <div style={styles.imageContainer}>
-        {data.image && <img src={data.image} alt={data.nom} style={styles.image} />}
+      {/* Bandeau blanc avec le logo centré */}
+      <div className="w-full bg-white flex justify-center items-center py-14 px-12 relative">
+        <div className="absolute left-0 right-0 flex justify-center">
+          <Image src="/logo.svg" alt="Logo" width={100} height={100} />
+        </div>
       </div>
-      <div style={styles.detailsContainer}>
-        <h1 style={styles.title}>{data.nom}</h1>
-        <p style={styles.description}>{data.description}</p>
 
-        {/* Affichage conditionnel pour le type */}
-        {searchParams.get('type') === 'chef' ? (
-          <>
-            <p style={styles.origin}>
-              <strong>Date de naissance :</strong> {data.dateNaissance}
-            </p>
-            <p style={styles.origin}>
-              <strong>Lieu de naissance :</strong> {data.lieuNaissance}
-            </p>
-          </>
-        ) : (
-          <>
-            <p style={styles.origin}>
-              <strong>Origine :</strong> {data.origine ? cleanDbpediaResource(data.origine) : 'Origine inconnue'}
-            </p>
-            <h2 style={styles.subtitle}>Ingrédients :</h2>
-            <ul style={styles.ingredientsList}>
-              {data.ingredients?.length > 0 ? (
-                data.ingredients.map((ingredient, index) => (
-                  <li key={index} style={styles.ingredient}>
-                    {cleanDbpediaResource(ingredient)}
-                  </li>
-                ))
-              ) : (
-                <li>Aucun ingrédient disponible.</li>
+      <div style={styles.container}>
+        <div style={styles.imageContainer}>
+          {data.image && <img src={data.image} alt={data.nom} style={styles.image} />}
+        </div>
+        <div style={styles.detailsContainer}>
+          <h1 style={styles.title}>{data.nom}</h1>
+          <p style={styles.description}>{data.description}</p>
+
+          {/* Affichage conditionnel pour le type */}
+          {searchParams.get('type') === 'chef' ? (
+            <>
+              <p style={styles.origin}>
+                <strong>Date de naissance :</strong> {data.dateNaissance ? formatDateISO(data.dateNaissance) : 'Date inconnue'}
+              </p>
+              <p style={styles.origin}>
+                <strong>Lieu de naissance :</strong> {data.lieuNaissance ? cleanDbpediaResource(data.lieuNaissance) : 'Lieu inconnu'}
+              </p>
+            </>
+          ) : searchParams.get('type') === 'plat' ? (
+            <>
+              <p style={styles.origin}>
+                <strong>Origine :</strong> {data.origine ? cleanDbpediaResource(data.origine) : 'Origine inconnue'}
+              </p>
+              <h2 style={styles.subtitle}>Ingrédients :</h2>
+              <ul style={styles.ingredientsList}>
+                {data.ingredients?.length > 0 ? (
+                  data.ingredients.map((ingredient, index) => (
+                    <li key={index} style={styles.ingredient}>
+                      {cleanDbpediaResource(ingredient)}
+                    </li>
+                  ))
+                ) : (
+                  <li>Aucun ingrédient disponible.</li>
+                )}
+              </ul>
+            </>
+          ) : searchParams.get('type') === 'cuisine' ? (
+            <>
+              {data.description && (
+                <p style={styles.origin}>
+                  <strong>Description :</strong> {data.description}
+                </p>
               )}
-            </ul>
-          </>
-        )}
+              {/* Ajoute d'autres informations spécifiques à la cuisine si nécessaire */}
+            </>
+          ) : null}
+        </div>
       </div>
-    </div>
     </div>
   );
 }
