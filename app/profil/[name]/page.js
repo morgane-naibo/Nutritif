@@ -99,12 +99,26 @@ export default function ProfilPage() {
             </>
           ) : searchParams.get('type') === 'cuisine' ? (
             <>
-              {data.description && (
+              {/*data.description && (
                 <p style={styles.origin}>
                   <strong>Description :</strong> {data.description}
                 </p>
-              )}
-              {/* Ajoute d'autres informations spécifiques à la cuisine si nécessaire */}
+              )*/}
+              {/* Ajoute d'autres informations spécifiques à la cuisine si nécessaire */
+              /*data.plats && data.plats.length > 0 ? (
+                <>
+                  <h2 style={styles.subtitle}>Plats principaux :</h2>
+                  <ul style={styles.ingredientsList}>
+                    {data.plats.map((plat, index) => (
+                      <li key={index} style={styles.ingredient}>
+                        {plat}
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              ) : (
+                <p style={styles.origin}>Aucun plat principal disponible pour cette cuisine.</p>
+              )*/}
             </>
           ) : null}
         </div>
