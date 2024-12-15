@@ -65,9 +65,9 @@ export function generateSparqlQueryChef(chef) {
       OPTIONAL { ?chef dbo:thumbnail ?image. }
       FILTER (
         CONTAINS(LCASE(STR(?chefLabel)), LCASE("${chefName}")) &&
-        (LANG(?description) = "fr" || LANG(?description) = "en")
+        (LANG(?description) = "fr")
       )
-      FILTER (LANG(?chefLabel) = "fr" || LANG(?chefLabel) = "en")
+      FILTER (LANG(?chefLabel) = "fr")
     }
     LIMIT 1
   `;
@@ -90,6 +90,7 @@ export async function fetchPlatData(name) {
       .map((binding) => cleanDbpediaResource(binding.ingredient.value)))];
 
     const result = json.results.bindings[0];
+    const ingredients = result.ingredients?.value ? result.ingredients.value.split(", ") : [];
 
     return {
       nom: result.dishLabel?.value || 'Nom inconnu',
@@ -123,7 +124,7 @@ export async function fetchChefData(chefName) {
       nom: result.chefLabel?.value || 'Nom inconnu',
       description: result.description?.value || 'Pas de description disponible.',
       dateNaissance: result.birthDate?.value || 'Date de naissance inconnue',
-      lieuNaissance: result.birthPlace?.value || 'Lieu de naissance inconnu',
+      lieuNaissance: cleanDbpediaResource(result.birthPlace?.value) || 'Lieu de naissance inconnu',
       image: result.image?.value || null,
     };
   } catch (error) {
