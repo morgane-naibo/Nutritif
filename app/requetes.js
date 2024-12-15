@@ -2,13 +2,31 @@ export function generateSparqlQueryPlat(plat) {
   const platName = plat.trim().replace(/%20/g, ' '); // Remplace les %20 par des espaces
 
   return `
-    SELECT DISTINCT ?abstract (SAMPLE(?dishLabel) AS ?dishLabel) (SAMPLE(?image) AS ?image)
+    SELECT DISTINCT 
+      ?abstract 
+      (SAMPLE(?dishLabel) AS ?dishLabel) 
+      (SAMPLE(?image) AS ?image) 
+      (GROUP_CONCAT(DISTINCT ?ingredientLabel; separator=", ") AS ?ingredients) 
+      (SAMPLE(?originLabel) AS ?origin)
     WHERE {
       ?dish rdf:type dbo:Food ;
             rdfs:label ?dishLabel ;
             dbo:abstract ?abstract ;
-            dbo:thumbnail ?image.
-      FILTER(LANG(?abstract) = "fr") 
+            dbo:thumbnail ?image .
+
+      OPTIONAL {
+        ?dish dbo:ingredient ?ingredient.
+        ?ingredient rdfs:label ?ingredientLabel.
+        FILTER(LANG(?ingredientLabel) = "fr")
+      }
+
+      OPTIONAL {
+        ?dish dbo:country ?originResource.
+        ?originResource rdfs:label ?originLabel.
+        FILTER(LANG(?originLabel) = "fr")
+      }
+
+      FILTER(LANG(?abstract) = "fr" && LANG(?dishLabel) = "fr")
       FILTER(CONTAINS(LCASE(?dishLabel), "${platName.toLowerCase()}"))
     }
     GROUP BY ?abstract
@@ -30,9 +48,9 @@ export function generateSparqlQueryChef(chef) {
       OPTIONAL { ?chef dbo:thumbnail ?image. }
       FILTER (
         CONTAINS(LCASE(STR(?chefLabel)), LCASE("${chefName}")) &&
-        (LANG(?description) = "fr" || LANG(?description) = "en")
+        (LANG(?description) = "fr")
       )
-      FILTER (LANG(?chefLabel) = "fr" || LANG(?chefLabel) = "en")
+      FILTER (LANG(?chefLabel) = "fr")
     }
     LIMIT 1
   `;
@@ -159,9 +177,8 @@ export function requete_profil_plat(nom) {
 
 export async function fetchPlatData(name) {
   try {
-    const url = `https://dbpedia.org/sparql?query=${encodeURIComponent(
-      generateSparqlQueryPlat(name)
-    )}&format=json`;
+    const query = generateSparqlQueryPlat(name);
+    const url = `https://dbpedia.org/sparql?query=${encodeURIComponent(query)}&format=json`;
 
     const response = await fetch(url);
     const json = await response.json();
@@ -170,17 +187,13 @@ export async function fetchPlatData(name) {
       throw new Error(`Aucun résultat trouvé pour "${name}".`);
     }
 
-    const ingredients = [...new Set(json.results.bindings
-      .filter((binding) => binding.ingredient?.value)
-      .map((binding) => cleanDbpediaResource(binding.ingredient.value))
-    )];
-
     const result = json.results.bindings[0];
+    const ingredients = result.ingredients?.value ? result.ingredients.value.split(", ") : [];
 
     return {
       nom: result.dishLabel?.value || 'Nom inconnu',
       description: result.abstract?.value || 'Pas de description disponible.',
-      origine: cleanDbpediaResource(result.origin?.value),
+      origine: result.origin?.value || 'Origine inconnue',
       ingredients,
       image: result.image?.value || null,
     };
@@ -209,7 +222,7 @@ export async function fetchChefData(chefName) {
       nom: result.chefLabel?.value || 'Nom inconnu',
       description: result.description?.value || 'Pas de description disponible.',
       dateNaissance: result.birthDate?.value || 'Date de naissance inconnue',
-      lieuNaissance: result.birthPlace?.value || 'Lieu de naissance inconnu',
+      lieuNaissance: cleanDbpediaResource(result.birthPlace?.value) || 'Lieu de naissance inconnu',
       image: result.image?.value || null,
     };
   } catch (error) {
