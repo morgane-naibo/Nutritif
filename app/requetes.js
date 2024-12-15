@@ -1,4 +1,4 @@
-export function generateSparqlQueryPlat(plat) {
+/*export function generateSparqlQueryPlat(plat) {
   const cleanedPlat = plat.replace(/%20/g, ' '); // Remplace les %20 par des espaces
   return `
     SELECT DISTINCT ?abstract (SAMPLE(?dishLabel) AS ?dishLabel) 
@@ -19,6 +19,31 @@ export function generateSparqlQueryPlat(plat) {
     LIMIT 15
   `;
 }
+  */
+export function generateSparqlQueryPlat(plat) {
+  const cleanedPlat = plat.replace(/%20/g, ' '); // Remplace les %20 par des espaces
+
+  return `
+    SELECT DISTINCT ?abstract (SAMPLE(?dishLabel) AS ?dishLabel) 
+                    (SAMPLE(?image) AS ?image) 
+                    (SAMPLE(?country) AS ?origine) 
+                    (GROUP_CONCAT(DISTINCT ?ingredient; separator=", ") AS ?ingredients)
+    WHERE {
+      ?dish rdf:type dbo:Food ;
+            rdfs:label ?dishLabel ;
+            dbo:abstract ?abstract ;
+            dbo:thumbnail ?image .
+      OPTIONAL { ?dish dbo:country ?country. }
+      OPTIONAL { ?dish dbo:ingredient ?ingredient. }
+      FILTER(LANG(?abstract) = "fr")
+      FILTER(REGEX(LCASE(?dishLabel), "${cleanedPlat.toLowerCase().replace(/[- ]/g, '.*')}", "i"))
+    }
+    GROUP BY ?abstract
+    LIMIT 15
+  `;
+}
+
+
 
 
 export function generateSparqlQueryChef(chef) {
@@ -35,7 +60,7 @@ export function generateSparqlQueryChef(chef) {
       OPTIONAL { ?chef dbo:thumbnail ?image. }
       FILTER (
         CONTAINS(LCASE(STR(?chefLabel)), LCASE("${chefName}")) &&
-        (LANG(?description) = "fr" || LANG(?description) = "en")
+        (LANG(?description) = "fr")
       )
       FILTER (LANG(?chefLabel) = "fr" || LANG(?chefLabel) = "en")
     }
@@ -190,8 +215,7 @@ const ingredients = result.ingredients?.value
     return {
       nom: result.dishLabel?.value || 'Nom inconnu',
       description: result.abstract?.value || 'Pas de description disponible.',
-      origine: cleanDbpediaResource(result.origin?.value),
-      origine: result.origin?.value || 'Origine inconnue',
+      origine: result.origine?.value ? cleanDbpediaResource(result.origine.value) : 'Origine inconnue',
       ingredients,
       image: result.image?.value || null,
     };
