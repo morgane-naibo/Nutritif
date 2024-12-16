@@ -15,6 +15,7 @@ import Link from "next/link";
 const YourComponent = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [results, setResults] = useState([]);
+  const [hasSearched, setHasSearched] = useState(false);
   const [suggestions, setSuggestions] = useState({
     plats: [],
     chefs: [],
@@ -56,6 +57,7 @@ const YourComponent = () => {
 
   const handleSearchSubmit = async (e) => {
     e.preventDefault();
+    setHasSearched(true); 
 
     let query;
     if (searchType === "chef") {
@@ -191,70 +193,50 @@ const YourComponent = () => {
 
      
       <div className="bg-red-600 min-h-screen pt-10 flex flex-col items-center">
-        <div className="results-container bg-white p-4 rounded shadow-lg w-11/12 sm:w-2/3 lg:w-1/2">
-          {results.length > 0 ? (
-            results.map((result, index) => (
-              <div
-                key={index}
-                className="result-container border-b-8 border-red-600 last:border-none -mx-4 py-3"
-              >
-                <Link
-                  href={`/profil/${encodeURIComponent(
-                    result.dishLabel?.value || result.chefLabel?.value || result.cuisineLabel?.value
-                  )}?type=${result.dishLabel ? 'plat' : result.chefLabel ? 'chef' : 'cuisine'}`}
-                  className="flex flex-col sm:flex-row items-start"
-                >
-                  {result.image?.value && (
-                    <img
-                      src={result.image?.value}
-                      alt={
-                        result.dishLabel?.value ||
-                        result.chefLabel?.value ||
-                        result.cuisineLabel?.value
-                      }
-                      className="result-image w-full sm:w-40 h-auto rounded"
-                    />
-                  )}
-                  <div className="result-text-container sm:ml-4 mt-4 sm:mt-0">
-                    <h2 className="result-dish-label text-xl font-bold text-gray-800">
-                      {result.dishLabel?.value || result.chefLabel?.value || result.cuisineLabel?.value}
-                    </h2>
-                    <p className="result-abstract text-gray-600 mt-2">
-                      {result.abstract?.value || result.description?.value || "Description indisponible"}
-                    </p>
-                    
-                  
-                    {result.ingredients && Array.isArray(result.ingredients) && (
-                      <div className="ingredients-section mt-4">
-                       <h3 style={{ fontWeight: "bold", marginTop: "10px" }}>Ingrédients :</h3>
-                      <ul style={{ listStyleType: "disc", paddingLeft: "20px" }}>
-                        {result.ingredients?.map((ingredient, idx) => (
-                          <li key={idx} style={{ fontSize: "16px", color: "#555" }}>
-                            {ingredient.value} 
-                          </li>
-                        ))}
-                      </ul>
-
-                      </div>
-                    )}
-
-
-                 
-                    {result.origine && (
-                        <p style={{ marginTop: "10px", fontSize: "16px", color: "#777" }}>
-                          <strong>Origine :</strong> {cleanDbpediaResource(result.origine.value) || result.origine}
-                        </p>
-                      )}
-
-                  </div>
-                </Link>
-              </div>
-            ))
-          ) : (
-            <p>Aucun résultat trouvé.</p>
-          )}
+  {/* Container des résultats */}
+  {results.length > 0 && (
+    <div className="results-container bg-white p-4 rounded shadow-lg w-11/12 sm:w-2/3 lg:w-1/2">
+      {results.map((result, index) => (
+        <div key={index} className="result-container border-b-8 border-red-600 last:border-none -mx-4 py-3">
+          <Link
+            href={`/profil/${encodeURIComponent(
+              result.dishLabel?.value || result.chefLabel?.value || result.cuisineLabel?.value
+            )}?type=${result.dishLabel ? 'plat' : result.chefLabel ? 'chef' : 'cuisine'}`}
+            className="flex flex-col sm:flex-row items-start"
+          >
+            {result.image?.value && (
+              <img
+                src={result.image?.value}
+                alt={
+                  result.dishLabel?.value ||
+                  result.chefLabel?.value ||
+                  result.cuisineLabel?.value
+                }
+                className="result-image w-full sm:w-40 h-auto rounded"
+              />
+            )}
+            <div className="result-text-container sm:ml-4 mt-4 sm:mt-0">
+              <h2 className="result-dish-label text-xl font-bold text-gray-800">
+                {result.dishLabel?.value || result.chefLabel?.value || result.cuisineLabel?.value}
+              </h2>
+              <p className="result-abstract text-gray-600 mt-2">
+                {result.abstract?.value || result.description?.value || "Description indisponible"}
+              </p>
+            </div>
+          </Link>
         </div>
-      </div>
+      ))}
+    </div>
+  )}
+
+  {/* Container pour "Aucun résultat trouvé" */}
+  {hasSearched && results.length === 0 && (
+    <div className="no-results-container bg-white p-4 rounded shadow-lg mt-4">
+      <p className="text-gray-600 font-bold">Aucun résultat trouvé.</p>
+    </div>
+  )}
+</div>
+
     </div>
   );
 };

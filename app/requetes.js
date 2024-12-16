@@ -22,6 +22,12 @@
   */
 export function generateSparqlQueryPlat(plat) {
   const cleanedPlat = plat.replace(/%20/g, ' '); // Remplace les %20 par des espaces
+  const cleanedPlat2 = cleanedPlat.replace(/%C3%A9/g, 'é'); // Remplace les accents
+  const cleanedPlat3 = cleanedPlat2.replace(/%C3%A8/g, 'è'); // Remplace les accents 
+  const cleanedPlat4 = cleanedPlat3.replace(/%C3%A0/g, 'à'); // Remplace les accents
+  const cleanedPlat5 = cleanedPlat4.replace(/%C3%A7/g, 'ç'); // Remplace les accents
+  const cleanedPlat6 = cleanedPlat5.replace(/%C3%B4/g, 'ô'); // Remplace les accents
+  const cleanedPlat7 = cleanedPlat6.replace(/%C3%AA/g, 'ê'); // Remplace les accents
 
   return `
     SELECT DISTINCT ?abstract (SAMPLE(?dishLabel) AS ?dishLabel) 
@@ -35,8 +41,8 @@ export function generateSparqlQueryPlat(plat) {
             dbo:thumbnail ?image .
       OPTIONAL { ?dish dbo:country ?country. }
       OPTIONAL { ?dish dbo:ingredient ?ingredient. }
-      FILTER(LANG(?abstract) = "fr")
-      FILTER(REGEX(LCASE(?dishLabel), "${cleanedPlat.toLowerCase().replace(/[- ]/g, '.*')}", "i"))
+      FILTER(LANG(?abstract) = "fr" && LANG(?dishLabel) = "fr")
+      FILTER(REGEX(LCASE(?dishLabel), "${cleanedPlat7.toLowerCase().replace(/[- ]/g, '.*')}", "i"))
     }
     GROUP BY ?abstract
     LIMIT 15
@@ -48,6 +54,13 @@ export function generateSparqlQueryPlat(plat) {
 
 export function generateSparqlQueryChef(chef) {
   const chefName = chef.trim().replace(/%20/g, ' '); // Remplace les %20 par des espaces
+  const cleanedChefName = chefName.replace(/%C3%A9/g, 'é'); // Remplace les accents
+  const cleanedChefName2 = cleanedChefName.replace(/%C3%A8/g, 'è'); // Remplace les accents
+  const cleanedChefName3 = cleanedChefName2.replace(/%C3%A0/g, 'à'); // Remplace les accents
+  const cleanedChefName4 = cleanedChefName3.replace(/%C3%A7/g, 'ç'); // Remplace les accents
+  const cleanedChefName5 = cleanedChefName4.replace(/%C3%B4/g, 'ô'); // Remplace les accents
+  const cleanedChefName6 = cleanedChefName5.replace(/%C3%AA/g, 'ê'); // Remplace les accents
+
 
   return `
     SELECT DISTINCT ?chef ?chefLabel ?birthDate ?description ?birthPlace ?image
@@ -59,7 +72,7 @@ export function generateSparqlQueryChef(chef) {
       OPTIONAL { ?chef dbo:birthPlace ?birthPlace. }
       OPTIONAL { ?chef dbo:thumbnail ?image. }
       FILTER (
-        CONTAINS(LCASE(STR(?chefLabel)), LCASE("${chefName}")) &&
+        CONTAINS(LCASE(STR(?chefLabel)), LCASE("${cleanedChefName6}")) &&
         (LANG(?description) = "fr")
       )
       FILTER (LANG(?chefLabel) = "fr" || LANG(?chefLabel) = "en")
@@ -69,23 +82,38 @@ export function generateSparqlQueryChef(chef) {
 }
 
 export function generateSparqlQueryCuisine(pays) {
-  const paysName = pays.replace(/^cuisine\s+/i, '').trim();
+  const paysName = pays.trim().replace(/%20/g, ' '); 
+  const cleanedPaysName = paysName.replace(/%C3%A9/g, 'é'); // Remplace les accents
+  const cleanedPaysName2 = cleanedPaysName.replace(/%C3%A8/g, 'è'); // Remplace les accents
+  const cleanedPaysName3 = cleanedPaysName2.replace(/%C3%A0/g, 'à'); // Remplace les accents
+  const cleanedPaysName4 = cleanedPaysName3.replace(/%C3%A7/g, 'ç'); // Remplace les accents
+  const cleanedPaysName5 = cleanedPaysName4.replace(/%C3%B4/g, 'ô'); // Remplace les accents
+  const cleanedPaysName6 = cleanedPaysName5.replace(/%C3%AA/g, 'ê'); // Remplace les accents
+  const cleanedPaysName7 = cleanedPaysName6.replace(/%C3%AE/g, 'î'); // Remplace les accents
+  const cleanedPaysName8 = cleanedPaysName7.replace(/%C3%AF/g, 'ï'); // Remplace les accents
+
 
   // Requête SPARQL pour rechercher une cuisine dans DBpedia
   return `
-    SELECT DISTINCT ?cuisine ?cuisineLabel ?description ?image
+    SELECT DISTINCT ?cuisine ?cuisineLabel ?description ?image (GROUP_CONCAT(?dishLabel; separator=", ") AS ?dishes)
     WHERE {
       ?cuisine a dbo:Country ;
-      a owl:Thing ;
-      dbo:abstract ?description;
-      rdfs:label ?cuisineLabel;
-      dbo:thumbnail ?image;
-      dbo:wikiPageWikiLink ?dishes.
+               rdfs:label ?cuisineLabel ;
+               dbo:abstract ?description ;
+               dbo:thumbnail ?image .
+      OPTIONAL {
+        ?dish rdf:type dbo:Food ;
+              dbo:country ?cuisine ;
+              rdfs:label ?dishLabel .
+        FILTER(LANG(?dishLabel) = "fr")
+      }
+      FILTER (CONTAINS(LCASE(?cuisineLabel), LCASE("cuisine")) && CONTAINS(LCASE(?description), LCASE("${cleanedPaysName8}")))
       FILTER (LANG(?cuisineLabel) = "fr" && LANG(?description) = "fr")
-      FILTER (CONTAINS(LCASE(?cuisineLabel), LCASE("cuisine")) && CONTAINS(LCASE(?description), LCASE("${paysName}")))
-      FILTER (CONTAINS(LCASE(STR(?dishes)), LCASE(STR("dish"))))
     }
-    `;
+    GROUP BY ?cuisine ?cuisineLabel ?description ?image
+    ORDER BY DESC(CONTAINS(LCASE(?cuisineLabel), LCASE("${paysName}"))) # Priorise les correspondances exactes
+    LIMIT 10
+  `;
 }
 
 
@@ -270,6 +298,7 @@ export async function fetchCuisineData(cuisineName) {
         nom: cleanedName,
         description: "Aucune donnée disponible pour cette cuisine.",
         image: null,
+        plats: [],
       };
     }
 
@@ -279,6 +308,7 @@ export async function fetchCuisineData(cuisineName) {
       nom: result.cuisineLabel?.value ? result.cuisineLabel?.value.replace(/%20/g, ' ') : 'Nom inconnu',
       description: result.description?.value || 'Pas de description disponible.',
       image: result.image?.value || null,
+      plats : result.dishes?.value.split(", ").map((dish) => cleanDbpediaResource(dish)) || [],
     };
   } catch (error) {
     console.error('Erreur dans fetchCuisineData :', error.message);
