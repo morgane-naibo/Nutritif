@@ -24,6 +24,29 @@ const YourComponent = () => {
   const [searchType, setSearchType] = useState("plat");
   const suggestionsRef = useRef(null);
 
+  const staticSuggestions = [
+    {
+      name: "Cuisine Mexicaine",
+      type: "cuisine",
+      description:
+        "La cuisine mexicaine est connue pour sa diversité et son héritage préhispanique.",
+      image: "/image/mexique.png",
+    },
+    {
+      name: "Cuisine Canadienne",
+      type: "cuisine",
+      description:
+        "La cuisine canadienne est célèbre pour ses techniques raffinées et sa diversité régionale.",
+      image: "/image/canada.png",
+    },
+    {
+      name: "Pain d'épices",
+      type: "plat",
+      description:
+        "Le pain d'épices est un gâteau traditionnel aux épices et au miel.",
+      image: "/image/pain.png",
+    },
+  ];
   // Fonction pour gérer le changement dans le champ de recherche
   const handleSearchChange = async (e) => {
     const value = e.target.value;
@@ -190,6 +213,37 @@ const YourComponent = () => {
           </form>
         </div>
       </div>
+
+{/* Suggestions statiques */}
+{!hasSearched && (
+  <div className="bg-red-600 py-10 flex flex-col items-center">
+    <h2 className="text-white text-2xl font-bold mb-5">Nos suggestions</h2>
+    <div className="space-y-4 w-11/12 sm:w-2/3 lg:w-1/2">
+      {staticSuggestions.map((suggestion, index) => (
+        <Link
+          key={index}
+          href={`/profil/${encodeURIComponent(suggestion.name)}?type=${suggestion.type}`}
+          className="flex items-center bg-white p-4 rounded shadow-lg hover:bg-gray-200"
+        >
+          <Image
+            src={suggestion.image || "/images/default.png"}
+            alt={suggestion.name}
+            width={128} // 32 * 4 = 128px
+            height={128} // 32 * 4 = 128px
+            className="object-cover rounded mr-4"
+            onError={(e) => {
+              e.target.src = "/images/default.png";
+            }}
+          />
+          <div>
+            <h3 className="text-xl font-bold">{suggestion.name}</h3>
+            <p className="text-gray-600 mt-2">{suggestion.description}</p>
+          </div>
+        </Link>
+      ))}
+    </div>
+  </div>
+)}
 
      
       <div className="bg-red-600 min-h-screen pt-10 flex flex-col items-center">
