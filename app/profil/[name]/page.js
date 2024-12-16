@@ -59,6 +59,12 @@ export default function ProfilPage() {
         <div className="absolute left-0 right-0 flex justify-center">
           <Image src="/logo.svg" alt="Logo" width={100} height={100} />
         </div>
+        <button 
+          onClick={() => window.location.href = "/"} 
+          style={styles.button}
+        >
+          Retour
+        </button>
       </div>
 
       <div style={styles.container}>
@@ -182,5 +188,17 @@ const styles = {
   ingredient: {
     fontSize: '16px',
     color: '#555',
+  },
+  button: {
+    backgroundColor: '#b91c1c',
+    color: 'white',
+    padding: '10px 20px',
+    border: 'none',
+    borderRadius: '5px',
+    cursor: 'pointer',
+    fontSize: '16px',
+    fontWeight: 'bold',
+    position: 'absolute',
+    left: '40px', 
   },
 };
