@@ -126,7 +126,7 @@ export default function ProfilPage() {
                 </p>
               )*/}
               {/* Ajoute d'autres informations spécifiques à la cuisine si nécessaire */
-              /*data.plats && data.plats.length > 0 ? (
+              data.plats && data.plats.length > 0 ? (
                 <>
                   <h2 style={styles.subtitle}>Plats principaux :</h2>
                   <ul style={styles.ingredientsList}>
@@ -141,7 +141,7 @@ export default function ProfilPage() {
                 </>
               ) : (
                 <p style={styles.origin}>Aucun plat principal disponible pour cette cuisine.</p>
-              )*/}
+              )}
             </>
           ) : null}
         </div>

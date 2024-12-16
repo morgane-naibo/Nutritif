@@ -41,8 +41,6 @@ export function generateSparqlQueryPlat(plat) {
             dbo:thumbnail ?image .
       OPTIONAL { 
         ?dish dbo:country ?country.
-        ?country rdfs:label ?countryLabel .
-        FILTER(LANG(?countryLabel) = "fr")
       }
       OPTIONAL { ?dish dbo:ingredient ?ingredient. }
       FILTER (BOUND(?ingredient))
