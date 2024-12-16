@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'next/navigation'; // Importer les hooks nécessaires
 import { fetchPlatData, fetchChefData, fetchCuisineData, cleanDbpediaResource, formatDateISO } from '../../requetes';
 import Image from "next/image";
+import Link from 'next/link';
 
 export default function ProfilPage() {
   const [data, setData] = useState(null);
@@ -59,6 +60,12 @@ export default function ProfilPage() {
         <div className="absolute left-0 right-0 flex justify-center">
           <Image src="/logo.svg" alt="Logo" width={100} height={100} />
         </div>
+        <button 
+          onClick={() => window.location.href = "/"} 
+          style={styles.button}
+        >
+          Retour
+        </button>
       </div>
 
       <div style={styles.container}>
@@ -81,9 +88,19 @@ export default function ProfilPage() {
             </>
           ) : searchParams.get('type') === 'plat' ? (
             <>
-              <p style={styles.origin}>
-                <strong>Origine :</strong> {data.origine ? cleanDbpediaResource(data.origine) : 'Origine inconnue'}
-              </p>
+            <p style={styles.origin}>
+              <strong>Origine :</strong>{' '}
+              {data.origine ? (
+                <Link
+                  href={`/profil/${encodeURIComponent(cleanDbpediaResource(data.origine))}?type=cuisine`}
+                  className="text-red-600 underline"
+                >
+                  {cleanDbpediaResource(data.origine)}
+                </Link>
+              ) : (
+                'Origine inconnue'
+              )}
+            </p>
               <h2 style={styles.subtitle}>Ingrédients :</h2>
               <ul style={styles.ingredientsList}>
                 {data.ingredients?.length > 0 ? (
@@ -105,7 +122,7 @@ export default function ProfilPage() {
                 </p>
               )*/}
               {/* Ajoute d'autres informations spécifiques à la cuisine si nécessaire */
-               data.plats.length > 0 && (
+              /*data.plats && data.plats.length > 0 ? (
                 <>
                   <h2 style={styles.subtitle}>Plats principaux :</h2>
                   <ul style={styles.ingredientsList}>
@@ -116,7 +133,9 @@ export default function ProfilPage() {
                     ))}
                   </ul>
                 </>
-              )}
+              ) : (
+                <p style={styles.origin}>Aucun plat principal disponible pour cette cuisine.</p>
+              )*/}
             </>
           ) : null}
         </div>
@@ -180,5 +199,17 @@ const styles = {
   ingredient: {
     fontSize: '16px',
     color: '#555',
+  },
+  button: {
+    backgroundColor: '#b91c1c',
+    color: 'white',
+    padding: '10px 20px',
+    border: 'none',
+    borderRadius: '5px',
+    cursor: 'pointer',
+    fontSize: '16px',
+    fontWeight: 'bold',
+    position: 'absolute',
+    left: '40px', 
   },
 };
