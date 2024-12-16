@@ -41,6 +41,7 @@ export function generateSparqlQueryPlat(plat) {
             dbo:thumbnail ?image .
       OPTIONAL { ?dish dbo:country ?country. }
       OPTIONAL { ?dish dbo:ingredient ?ingredient. }
+      FILTER (BOUND(?ingredient))
       FILTER(LANG(?abstract) = "fr" && LANG(?dishLabel) = "fr")
       FILTER(REGEX(LCASE(?dishLabel), "${cleanedPlat7.toLowerCase().replace(/[- ]/g, '.*')}", "i"))
     }
