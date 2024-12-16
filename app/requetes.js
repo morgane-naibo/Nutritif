@@ -71,21 +71,25 @@ export function generateSparqlQueryChef(chef) {
 export function generateSparqlQueryCuisine(pays) {
   const paysName = pays.replace(/^cuisine\s+/i, '').trim();
 
-  // Requête SPARQL pour rechercher une cuisine dans DBpedia
   return `
-    SELECT DISTINCT ?cuisine ?cuisineLabel ?description ?image
+    SELECT DISTINCT ?cuisine ?cuisineLabel ?description ?image (GROUP_CONCAT(?dishLabel; separator=", ") AS ?dishes)
     WHERE {
       ?cuisine a dbo:Country ;
-      a owl:Thing ;
-      dbo:abstract ?description;
-      rdfs:label ?cuisineLabel;
-      dbo:thumbnail ?image;
-      dbo:wikiPageWikiLink ?dishes.
-      FILTER (LANG(?cuisineLabel) = "fr" && LANG(?description) = "fr")
+               rdfs:label ?cuisineLabel ;
+               dbo:abstract ?description ;
+               dbo:thumbnail ?image .
+      OPTIONAL {
+        ?dish rdf:type dbo:Food ;
+              dbo:country ?cuisine ;
+              rdfs:label ?dishLabel .
+        FILTER(LANG(?dishLabel) = "fr")
+      }
       FILTER (CONTAINS(LCASE(?cuisineLabel), LCASE("cuisine")) && CONTAINS(LCASE(?description), LCASE("${paysName}")))
-      FILTER (CONTAINS(LCASE(STR(?dishes)), LCASE(STR("dish"))))
+      FILTER (LANG(?cuisineLabel) = "fr" && LANG(?description) = "fr")
     }
-    `;
+    GROUP BY ?cuisine ?cuisineLabel ?description ?image
+    LIMIT 10
+  `;
 }
 
 
