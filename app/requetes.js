@@ -64,21 +64,26 @@ export function generateSparqlQueryChef(chef) {
 
 
   return `
-    SELECT DISTINCT ?chef ?chefLabel ?birthDate ?description ?birthPlace ?image
-    WHERE {
-      ?chef a dbo:Chef ;
-            rdfs:label ?chefLabel ;
-            dbo:abstract ?description .
-      OPTIONAL { ?chef dbo:birthDate ?birthDate. }
-      OPTIONAL { ?chef dbo:birthPlace ?birthPlace. }
-      OPTIONAL { ?chef dbo:thumbnail ?image. }
-      FILTER (
-        CONTAINS(LCASE(STR(?chefLabel)), LCASE("${cleanedChefName6}")) &&
-        (LANG(?description) = "fr")
-      )
-      FILTER (LANG(?chefLabel) = "fr" || LANG(?chefLabel) = "en")
-    }
-    LIMIT 1
+    SELECT DISTINCT ?chef (SAMPLE(?chefLabel) AS ?chefLabel) 
+                (SAMPLE(?birthDate) AS ?birthDate) 
+                (SAMPLE(?description) AS ?description) 
+                (SAMPLE(?birthPlace) AS ?birthPlace) 
+                (SAMPLE(?image) AS ?image)
+WHERE {
+  ?chef a dbo:Chef ;
+        rdfs:label ?chefLabel ;
+        dbo:abstract ?description .
+  OPTIONAL { ?chef dbo:birthDate ?birthDate. }
+  OPTIONAL { ?chef dbo:birthPlace ?birthPlace. }
+  OPTIONAL { ?chef dbo:thumbnail ?image. }
+  FILTER (
+    CONTAINS(LCASE(STR(?chefLabel)), LCASE("${cleanedChefName6}")) &&
+    (LANG(?description) = "fr")
+  )
+  FILTER (LANG(?chefLabel) = "fr" || LANG(?chefLabel) = "en")
+}
+GROUP BY ?chef
+LIMIT 15
   `;
 }
 
