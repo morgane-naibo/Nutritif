@@ -111,6 +111,7 @@ export function generateSparqlQueryCuisine(pays) {
       FILTER (LANG(?cuisineLabel) = "fr" && LANG(?description) = "fr")
     }
     GROUP BY ?cuisine ?cuisineLabel ?description ?image
+    ORDER BY DESC(CONTAINS(LCASE(?cuisineLabel), LCASE("${paysName}"))) # Priorise les correspondances exactes
     LIMIT 10
   `;
 }
