@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'next/navigation'; // Importer les hooks nécessaires
 import { fetchPlatData, fetchChefData, fetchCuisineData, cleanDbpediaResource, formatDateISO } from '../../requetes';
 import Image from "next/image";
+import Link from 'next/link';
 
 export default function ProfilPage() {
   const [data, setData] = useState(null);
@@ -56,8 +57,12 @@ export default function ProfilPage() {
     <div className="min-h-screen flex flex-col bg-red-600">
       {/* Bandeau blanc avec le logo centré */}
       <div className="w-full bg-white flex justify-center items-center py-14 px-12 relative">
-        <div className="absolute left-0 right-0 flex justify-center">
+        <div className="absolute left-0 right-0 flex justify-center"> 
+        <button 
+          onClick={() => window.location.href = "/"} 
+        >
           <Image src="/logo.svg" alt="Logo" width={100} height={100} />
+        </button>
         </div>
         <button 
           onClick={() => window.location.href = "/"} 
@@ -88,7 +93,17 @@ export default function ProfilPage() {
           ) : searchParams.get('type') === 'plat' ? (
             <>
               <p style={styles.origin}>
-                <strong>Origine :</strong> {data.origine ? cleanDbpediaResource(data.origine) : 'Origine inconnue'}
+                <strong>Origine :</strong>{' '}
+                {data.origine ? (
+                  <Link
+                    href={`/profil/${encodeURIComponent(cleanDbpediaResource(data.origine))}?type=cuisine`}
+                    className="text-red-600 underline"
+                  >
+                    {cleanDbpediaResource(data.origine)}
+                  </Link>
+                ) : (
+                  'Origine inconnue'
+                )}
               </p>
               <h2 style={styles.subtitle}>Ingrédients :</h2>
               <ul style={styles.ingredientsList}>
@@ -117,7 +132,9 @@ export default function ProfilPage() {
                   <ul style={styles.ingredientsList}>
                     {data.plats.map((plat, index) => (
                       <li key={index} style={styles.ingredient}>
-                        {plat}
+                        <Link href={`/profil/${encodeURIComponent(plat)}?type=plat`} className="text-blue-600 underline">
+                          {plat}
+                        </Link>
                       </li>
                     ))}
                   </ul>

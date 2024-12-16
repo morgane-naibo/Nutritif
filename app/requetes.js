@@ -39,7 +39,11 @@ export function generateSparqlQueryPlat(plat) {
             rdfs:label ?dishLabel ;
             dbo:abstract ?abstract ;
             dbo:thumbnail ?image .
-      OPTIONAL { ?dish dbo:country ?country. }
+      OPTIONAL { 
+        ?dish dbo:country ?country.
+        ?country rdfs:label ?countryLabel .
+        FILTER(LANG(?countryLabel) = "fr")
+      }
       OPTIONAL { ?dish dbo:ingredient ?ingredient. }
       FILTER (BOUND(?ingredient))
       FILTER(LANG(?abstract) = "fr" && LANG(?dishLabel) = "fr")
@@ -114,7 +118,8 @@ export function generateSparqlQueryCuisine(pays) {
         FILTER(LANG(?dishLabel) = "fr")
       }
       FILTER (CONTAINS(LCASE(?cuisineLabel), LCASE("cuisine")) && CONTAINS(LCASE(?description), LCASE("${cleanedPaysName8}")))
-      FILTER (LANG(?cuisineLabel) = "fr" && LANG(?description) = "fr")
+      FILTER (LANG(?cuisineLabel) = "fr")
+      FILTER (LANG(?description) = "fr")
     }
     GROUP BY ?cuisine ?cuisineLabel ?description ?image
     ORDER BY DESC(CONTAINS(LCASE(?cuisineLabel), LCASE("${paysName}"))) # Priorise les correspondances exactes
