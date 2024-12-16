@@ -5,7 +5,6 @@ import { useParams, useSearchParams } from 'next/navigation'; // Importer les ho
 import { fetchPlatData, fetchChefData, fetchCuisineData, cleanDbpediaResource, formatDateISO } from '../../requetes';
 import Image from "next/image";
 import Link from 'next/link';
-import Link from 'next/link';
 
 export default function ProfilPage() {
   const [data, setData] = useState(null);
