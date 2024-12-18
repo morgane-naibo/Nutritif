@@ -23,28 +23,36 @@
 export function generateSparqlQueryPlat(plat) {
   const cleanedPlat = plat.replace(/%20/g, ' '); // Remplace les %20 par des espaces
   const cleanedPlat2 = cleanedPlat.replace(/%C3%A9/g, 'é'); // Remplace les accents
-  const cleanedPlat3 = cleanedPlat2.replace(/%C3%A8/g, 'è'); // Remplace les accents 
+  const cleanedPlat3 = cleanedPlat2.replace(/%C3%A8/g, 'è'); // Remplace les accents
   const cleanedPlat4 = cleanedPlat3.replace(/%C3%A0/g, 'à'); // Remplace les accents
   const cleanedPlat5 = cleanedPlat4.replace(/%C3%A7/g, 'ç'); // Remplace les accents
   const cleanedPlat6 = cleanedPlat5.replace(/%C3%B4/g, 'ô'); // Remplace les accents
   const cleanedPlat7 = cleanedPlat6.replace(/%C3%AA/g, 'ê'); // Remplace les accents
-
   return `
-    SELECT DISTINCT ?abstract (SAMPLE(?dishLabel) AS ?dishLabel) 
-                    (SAMPLE(?image) AS ?image) 
-                    (SAMPLE(?country) AS ?origine) 
-                    (GROUP_CONCAT(DISTINCT ?ingredient; separator=", ") AS ?ingredients)
+    SELECT DISTINCT ?abstract
+                    (SAMPLE(?dishLabel) AS ?dishLabel)
+                    (SAMPLE(?image) AS ?image)
+                    (SAMPLE(REPLACE(STR(?countryLabel), "Franca", "France")) AS ?origine)
+                    (GROUP_CONCAT(DISTINCT ?ingredientLabel; separator=", ") AS ?ingredients)
     WHERE {
       ?dish rdf:type dbo:Food ;
             rdfs:label ?dishLabel ;
             dbo:abstract ?abstract ;
-            dbo:thumbnail ?image .
-      OPTIONAL { 
-        ?dish dbo:country ?country.
+            dbo:thumbnail ?image ;
+            dbo:country ?country ;
+            dbo:ingredient ?ingredient .
+     
+      ?country rdfs:label ?countryLabel .
+     
+      OPTIONAL {
+        ?ingredient rdfs:label ?ingredientLabel .
+        FILTER(LANG(?ingredientLabel) = "fr")
       }
-      OPTIONAL { ?dish dbo:ingredient ?ingredient. }
-      FILTER (BOUND(?ingredient))
-      FILTER(LANG(?abstract) = "fr" && LANG(?dishLabel) = "fr")
+     
+      FILTER(LANG(?abstract) = "fr" &&
+             LANG(?dishLabel) = "fr" &&
+             LANG(?countryLabel) = "fr")
+     
       FILTER(REGEX(LCASE(?dishLabel), "${cleanedPlat7.toLowerCase().replace(/[- ]/g, '.*')}", "i"))
     }
     GROUP BY ?abstract
@@ -103,7 +111,7 @@ export function generateSparqlQueryCuisine(pays) {
 
   // Requête SPARQL pour rechercher une cuisine dans DBpedia
   return `
-    SELECT DISTINCT ?cuisine ?cuisineLabel ?description ?image (GROUP_CONCAT(?dishLabel; separator=", ") AS ?dishes)
+    SELECT DISTINCT ?cuisine (SAMPLE(REPLACE(STR(?cuisineLabel), "cuisine française", "France")) AS ?cuisineLabel)  ?description ?image (GROUP_CONCAT(?dishLabel; separator=", ") AS ?dishes)
     WHERE {
       ?cuisine a dbo:Country ;
                rdfs:label ?cuisineLabel ;
@@ -181,47 +189,7 @@ export async function fetchSuggestions(query, type) {
   }).filter(Boolean); // Filtre les valeurs null/undefined
 }
 
-/*const handleSearchChange = async (e) => {
-  const value = e.target.value;
-  setSearchQuery(value);
-  if (value.length >= 3) {
-    const suggs = await fetchSuggestions(value, searchType);
-    setSuggestions(suggs);
-  } else {
-    setSuggestions([]);
-  }
-};
-const handleSearchSubmit = async (e) => {
-  e.preventDefault();
-  setSuggestions([]); // On ferme les suggestions après la soumission
-  let query;
-  if (searchType === 'chef') {
-    query = generateSparqlQueryChef(searchQuery);
-  } else if (searchType === 'cuisine') {
-    query = generateSparqlQueryCuisine(searchQuery);
-  } else {
-    query = generateSparqlQueryPlat(searchQuery);
-  }
-  const data = await fetchSparqlResults(query);
-  setResults(data);
-};
-export function requete_profil_plat(nom) {
-  return `
-    SELECT DISTINCT ?name ?description ?origin ?ingredient ?image
-    WHERE {
-      ?dish a dbo:Food ;
-            rdfs:label ?name ;
-            dbo:abstract ?description ;
-            dbo:country ?origin ;
-            dbo:ingredient ?ingredient ;
-            dbo:thumbnail ?image .
-      FILTER (lang(?description) = "fr") # Si la description française n'existe pas, remplacez par "en"
-      FILTER (CONTAINS(LCASE(STR(?name)), LCASE("${nom}")))
-    }
-  `;
-}*/
-
-
+// Fonction pour récupérer les données d'un plat depuis DBpedia
 export async function fetchPlatData(name) {
   try {
     //const url = `https://dbpedia.org/sparql?query=${encodeURIComponent(
@@ -241,8 +209,8 @@ export async function fetchPlatData(name) {
 
 // Récupération des ingrédients uniques
 const ingredients = result.ingredients?.value
-  ? result.ingredients.value.split(", ") // Cas où `ingredients.value` existe
-  : [...new Set( // Cas où les ingrédients sont dans des bindings individuels
+  ? result.ingredients.value.split(", ").filter(ing => ing.trim() !== '')
+  : [...new Set(
       json.results.bindings
         .filter((binding) => binding.ingredient?.value)
         .map((binding) => cleanDbpediaResource(binding.ingredient.value))
@@ -293,11 +261,12 @@ export async function fetchChefData(chefName) {
 
 export async function fetchCuisineData(cuisineName) {
   try {
-    const cleanedName = cuisineName.replace(/%20/g, ' ');
+    // Special handling for "Cuisine française"
+    const cleanedName = cuisineName === "Cuisine française" ? "France" : cuisineName.replace(/%20/g, ' ');
+    
     const query = generateSparqlQueryCuisine(cleanedName);
     const url = `https://dbpedia.org/sparql?query=${encodeURIComponent(query)}&format=json`;
 
-    //console.log("Requête SPARQL Cuisine :", query); // Log de la requête
     const response = await fetch(url);
     const json = await response.json();
 
@@ -324,6 +293,8 @@ export async function fetchCuisineData(cuisineName) {
     throw error;
   }
 }
+
+
 
 export function formatDateISO(dateISO) {
   const mois = [

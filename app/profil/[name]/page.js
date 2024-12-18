@@ -18,26 +18,32 @@ export default function ProfilPage() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const { name } = params; // Récupération du nom depuis l'URL
-        const type = searchParams.get('type'); // Récupération du "type" dans la query string
-
+        let { name } = params;
+        const type = searchParams.get('type');
+  
+        // Redirect "Cuisine française" to "France" when type is cuisine
+        if (type === 'cuisine' && name === 'Cuisine%20fran%C3%A7aise') {
+          window.location.href = '/profil/France?type=cuisine';
+          return;
+        }
+  
+        // Rest of the existing code remains the same
         if (!name || !type) {
           throw new Error('Nom ou type manquant dans les paramètres.');
         }
-
+  
         let fetchedData;
-
-        // Appels en fonction du type (plat, chef ou cuisine)
+  
         if (type === 'plat') {
           fetchedData = await fetchPlatData(name);
         } else if (type === 'chef') {
           fetchedData = await fetchChefData(name);
         } else if (type === 'cuisine') {
-          fetchedData = await fetchCuisineData(name); // Utilisation correcte
+          fetchedData = await fetchCuisineData(name);
         } else {
           throw new Error('Type invalide. Utilisez "plat", "chef" ou "cuisine".');
         }
-
+  
         setData(fetchedData);
         setLoading(false);
       } catch (err) {
@@ -46,12 +52,38 @@ export default function ProfilPage() {
         setLoading(false);
       }
     }
-
+  
     fetchData();
   }, [params, searchParams]);
 
   if (loading) return <p>Chargement...</p>;
-  if (error) return <p>Erreur : {error}</p>;
+  if (error) {
+    const { name } = params;
+    return (
+      <div className="min-h-screen flex flex-col bg-red-600">
+        <div className="w-full bg-white flex justify-center items-center py-14 px-12 relative">
+          <div className="absolute left-0 right-0 flex justify-center"> 
+            <button onClick={() => window.location.href = "/"}>
+              <Image src="/logo.svg" alt="Logo" width={100} height={100} />
+            </button>
+          </div>
+          <button 
+            onClick={() => window.location.href = "/"} 
+            style={styles.button}
+          >
+            Accueil
+          </button>
+        </div>
+
+        <div style={{...styles.container, flexDirection: 'column', alignItems: 'center', textAlign: 'center'}}>
+          <h1 style={styles.title}>{decodeURIComponent(name)}</h1>
+          <p style={{...styles.description, color: 'red'}}>
+            Aucune information disponible pour {decodeURIComponent(name)}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-red-600">
@@ -68,7 +100,7 @@ export default function ProfilPage() {
           onClick={() => window.location.href = "/"} 
           style={styles.button}
         >
-          Retour
+          Accueil
         </button>
       </div>
 
@@ -132,9 +164,16 @@ export default function ProfilPage() {
                   <ul style={styles.ingredientsList}>
                     {data.plats.map((plat, index) => (
                       <li key={index} style={styles.ingredient}>
-                        <Link href={`/profil/${encodeURIComponent(plat)}?type=plat`} className="text-blue-600 underline">
-                          {plat}
-                        </Link>
+                        {plat.toLowerCase() !== 'inconnu' ? (
+                          <Link 
+                            href={`/profil/${encodeURIComponent(plat)}?type=plat`} 
+                            className="text-blue-600 underline"
+                          >
+                            {plat}
+                          </Link>
+                        ) : (
+                          <span className="text-gray-500">{plat}</span>
+                        )}
                       </li>
                     ))}
                   </ul>
